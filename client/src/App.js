@@ -1,24 +1,50 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 
-import Navbar from "./components/Navbar";
 import Login from "./pages/Login";
-import Dashboard from "./pages/Dashboard";
-import Activities from "./pages/Activities";
-import UserActivities from "./pages/UserActivities";
-import AdminEngagements from "./pages/AdminEngagements";
+
+// Admin Pages
+import AdminLayout from "./pages/admin/AdminLayout";
+import Dashboard from "./pages/admin/Dashboard";
+import Users from "./pages/admin/Users";
+import Activities from "./pages/admin/Activities";
+import Analytics from "./pages/admin/Analytics";
+import Reports from "./pages/admin/Reports";
+import Alerts from "./pages/admin/Alerts";
+import Settings from "./pages/admin/Settings";
+import UserLayout from "./pages/user/UserLayout";
+import UserDashboard from "./pages/user/UserDashboard";
+import UserActivities from "./pages/user/UserActivities";
+import UserProgress from "./pages/user/UserProgress";
+import UserProfile from "./pages/user/UserProfile";
 
 function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
-        <Navbar />
         <Routes>
+
+          {/* Login */}
           <Route path="/" element={<Login />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/activities" element={<Activities />} />
-          <Route path="/user-activities" element={<UserActivities />} />
-          <Route path="/admin-engagements" element={<AdminEngagements />} />
+
+          {/* Admin Panel */}
+          <Route path="/admin" element={<AdminLayout />}>
+            <Route index element={<Dashboard />} />
+            <Route path="users" element={<Users />} />
+            <Route path="activities" element={<Activities />} />
+            <Route path="analytics" element={<Analytics />} />
+            <Route path="reports" element={<Reports />} />
+            <Route path="alerts" element={<Alerts />} />
+            <Route path="settings" element={<Settings />} />
+          </Route>
+            <Route path="/user" element={<UserLayout />}>
+            <Route path="dashboard" element={<UserDashboard />} />
+            <Route path="activities" element={<UserActivities />} />
+            <Route path="progress" element={<UserProgress />} />
+            <Route path="profile" element={<UserProfile />} />
+          </Route>
+
+
         </Routes>
       </BrowserRouter>
     </AuthProvider>
