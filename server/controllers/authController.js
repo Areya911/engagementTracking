@@ -12,7 +12,7 @@ const generateToken = (id, role) => {
 // Register
 exports.registerUser = async (req, res) => {
     try {
-        const { name, email, password, role } = req.body;
+        const { name, email, password, role, department } = req.body;
 
         const userExists = await User.findOne({ email });
         if (userExists) {
@@ -25,7 +25,8 @@ exports.registerUser = async (req, res) => {
             name,
             email,
             password: hashedPassword,
-            role
+            role,
+            department
         });
 
         res.status(201).json({
@@ -33,6 +34,7 @@ exports.registerUser = async (req, res) => {
             name: user.name,
             email: user.email,
             role: user.role,
+             department: user.department,
             token: generateToken(user._id, user.role)
         });
 

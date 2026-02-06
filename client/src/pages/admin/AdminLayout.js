@@ -1,34 +1,45 @@
 import { Link, Outlet } from "react-router-dom";
+import "../../styles/admin.css";
+import {
+  FaTachometerAlt,
+  FaUsers,
+  FaChartBar,
+  FaTasks,
+  FaFileAlt,
+  FaBell,
+  FaCog
+} from "react-icons/fa";
 
 export default function AdminLayout() {
   return (
-    <div style={{ display: "flex", minHeight: "100vh" }}>
+    <div className="admin-container">
       
-      {/* Sidebar */}
-      <div style={{
-        width: 230,
-        background: "#0f172a",
-        color: "white",
-        padding: 20
-      }}>
+      <div className="sidebar">
         <h2>EduTrack</h2>
-        <p style={{ fontSize: 12, opacity: 0.7 }}>Engagement Analytics</p>
+        <p>Engagement Analytics</p>
 
-        <div style={{ marginTop: 30, display: "flex", flexDirection: "column", gap: 15 }}>
-          <Link to="/admin" style={{ color: "white" }}>Dashboard</Link>
-          <Link to="/admin/users" style={{ color: "white" }}>Users</Link>
-          <Link to="/admin/analytics" style={{ color: "white" }}>Analytics</Link>
-          <Link to="/admin/activities" style={{ color: "white" }}>Activities</Link>
-          <Link to="/admin/reports" style={{ color: "white" }}>Reports</Link>
-          <Link to="/admin/alerts" style={{ color: "white" }}>Alerts</Link>
-          <Link to="/admin/settings" style={{ color: "white" }}>Settings</Link>
-        </div>
+        <Link to="/admin"><FaTachometerAlt /> Dashboard</Link>
+        <Link to="/admin/users"><FaUsers /> Users</Link>
+        <Link to="/admin/activities"><FaTasks /> Activities</Link>
+        <Link to="/admin/analytics"><FaChartBar /> Analytics</Link>
+        <Link to="/admin/reports"><FaFileAlt /> Reports</Link>
+        <Link to="/admin/alerts"><FaBell /> Alerts</Link>
+        <Link to="/admin/settings"><FaCog /> Settings</Link>
       </div>
 
-      {/* Main Content */}
-      <div style={{ flex: 1, padding: 30, background: "#f8fafc" }}>
+      <div className="main-content">
+        <Topbar />
         <Outlet />
       </div>
+    </div>
+  );
+}
+
+function Topbar() {
+  return (
+    <div className="topbar">
+      <input placeholder="Search..." />
+      <div>Admin</div>
     </div>
   );
 }
