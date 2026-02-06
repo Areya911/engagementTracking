@@ -19,7 +19,9 @@ export default function Users() {
           marginTop: 10,
           borderRadius: 8
         }}>
-          <b>{u.name}</b> — {u.email}
+          <b>{u.name}</b><br />
+          {u.email}<br />
+          Role: {u.role}
         </div>
       ))}
     </div>
