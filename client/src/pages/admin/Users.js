@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import API from "../../api/axios";
 
 export default function Users() {
@@ -52,6 +53,7 @@ export default function Users() {
               <th>Department</th>
               <th>Engagement</th>
               <th>Status</th>
+              <th>Actions</th>
             </tr>
           </thead>
 
@@ -96,17 +98,20 @@ export default function Users() {
                   <td>{user.department || "General"}</td>
 
                   {/* ENGAGEMENT BAR */}
-                  <td style={{ width: 200 }}>
+                  <td style={{ width: 220 }}>
                     <div style={{
                       background: "#eee",
                       borderRadius: 10,
                       height: 8,
-                      width: 150
+                      width: 160
                     }}>
                       <div style={{
                         width: `${score}%`,
                         height: "100%",
-                        background: "#22c55e",
+                        background:
+                          score >= 70 ? "#22c55e" :
+                          score >= 40 ? "#f59e0b" :
+                          "#ef4444",
                         borderRadius: 10
                       }} />
                     </div>
@@ -118,12 +123,27 @@ export default function Users() {
                     <span style={{
                       background: status.color,
                       color: "white",
-                      padding: "4px 10px",
+                      padding: "4px 12px",
                       borderRadius: 20,
-                      fontSize: 12
+                      fontSize: 12,
+                      fontWeight: 500
                     }}>
                       {status.text}
                     </span>
+                  </td>
+
+                  {/* ACTIONS */}
+                  <td>
+                    <Link
+                      to={`/admin/users/${user._id}`}
+                      style={{
+                        color: "#6c6eda",
+                        fontWeight: 600,
+                        textDecoration: "none"
+                      }}
+                    >
+                      View Profile
+                    </Link>
                   </td>
 
                 </tr>

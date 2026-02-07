@@ -7,11 +7,14 @@ import Login from "./pages/Login";
 import AdminLayout from "./pages/admin/AdminLayout";
 import Dashboard from "./pages/admin/Dashboard";
 import Users from "./pages/admin/Users";
+import AdminUserProfile from "./pages/admin/AdminUserProfile";
 import Activities from "./pages/admin/Activities";
 import Analytics from "./pages/admin/Analytics";
 import Reports from "./pages/admin/Reports";
 import Alerts from "./pages/admin/Alerts";
 import Settings from "./pages/admin/Settings";
+
+// User Pages
 import UserLayout from "./pages/user/UserLayout";
 import UserDashboard from "./pages/user/UserDashboard";
 import UserActivities from "./pages/user/UserActivities";
@@ -31,6 +34,7 @@ function App() {
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<Dashboard />} />
             <Route path="users" element={<Users />} />
+            <Route path="users/:id" element={<AdminUserProfile />} />
             <Route path="activities" element={<Activities />} />
             <Route path="analytics" element={<Analytics />} />
             <Route path="reports" element={<Reports />} />
