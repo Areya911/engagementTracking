@@ -5,7 +5,7 @@ const User = require("../models/User");
 const { getAllUsers } = require('../controllers/userController');
 const { protect } = require('../middleware/authMiddleware');
 const { isAdmin } = require('../middleware/adminMiddleware');
-
+const { updateProfile } = require("../controllers/userController");
 // Admin only
 router.get('/', protect, isAdmin, getAllUsers);
 
@@ -37,4 +37,8 @@ router.get("/:id", protect, async (req, res) => {
   res.json(user);
 });
 
+
+// UPDATE admin profile (name, department, phone) - for logged-in users
+
+router.put("/profile", protect, updateProfile);
 module.exports = router;

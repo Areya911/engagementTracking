@@ -9,14 +9,6 @@ const activitySchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    date: {
-        type: Date,
-        required: true
-    },
-    duration: {
-        type: String,
-        required: true
-    },
     description: {
         type: String
     }

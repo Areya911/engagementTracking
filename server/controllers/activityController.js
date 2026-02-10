@@ -2,12 +2,21 @@ const Activity = require('../models/Activity');
 
 // Create Activity (Admin)
 exports.createActivity = async (req, res) => {
-    try {
-        const activity = await Activity.create(req.body);
-        res.status(201).json(activity);
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
+  try {
+    const { name, category, description } = req.body;
+
+    const activity = await Activity.create({
+      name,
+      category,
+      description,
+      createdBy: req.user?._id   // important
+    });
+
+    res.status(201).json(activity);
+  } catch (err) {
+    console.log(err);   // <-- this shows real error
+    res.status(500).json({ message: err.message });
+  }
 };
 
 // Get All Activities (Logged-in users)
