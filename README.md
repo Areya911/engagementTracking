@@ -68,7 +68,7 @@ npm start
 The app will run at:
 http://localhost:3000
 
-## 🗄️ Database Design
+##  Database Design
 
 Main entities:
 
@@ -99,7 +99,7 @@ Wireframes created using Figma for:
 * feature/* → Individual feature branches
 
 
-## 👨‍💻 Author
+##  Author
 
 Areya K S
 3rd Year Computer Science Student
