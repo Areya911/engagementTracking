@@ -2,6 +2,7 @@ import { useState, useContext } from "react";
 import API from "../api/axios";
 import { AuthContext } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
+import "./Login.css";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -14,42 +15,42 @@ export default function Login() {
     try {
       const res = await API.post("/auth/login", { email, password });
 
-      // Save token
       localStorage.setItem("token", res.data.token);
-
-      // Save full user object
       login(res.data);
 
-      // Role-based navigation
       if (res.data.role === "admin") {
         navigate("/admin");
       } else {
         navigate("/user/dashboard");
       }
-
     } catch (err) {
       alert("Invalid credentials");
     }
   };
 
   return (
-    <div style={{ padding: 50 }}>
-      <h2>Login</h2>
+    <div className="login-wrapper">
+      <div className="login-card">
+        <h2 className="title">EduTrack</h2>
+        <p className="subtitle">Sign in to continue</p>
 
-      <input
-        placeholder="Email"
-        onChange={e => setEmail(e.target.value)}
-      />
-      <br /><br />
+        <input
+          className="input"
+          placeholder="Email"
+          onChange={e => setEmail(e.target.value)}
+        />
 
-      <input
-        type="password"
-        placeholder="Password"
-        onChange={e => setPassword(e.target.value)}
-      />
-      <br /><br />
+        <input
+          className="input"
+          type="password"
+          placeholder="Password"
+          onChange={e => setPassword(e.target.value)}
+        />
 
-      <button onClick={handleLogin}>Login</button>
+        <button className="login-btn" onClick={handleLogin}>
+          Login
+        </button>
+      </div>
     </div>
   );
 }
