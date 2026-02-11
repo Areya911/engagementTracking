@@ -13,7 +13,7 @@ const engagementSchema = new mongoose.Schema({
     },
     attendanceStatus: {
         type: String,
-        enum: ['registered', 'attended', 'completed'],
+        enum: ['registered', 'attended', 'completed','absent'],
         default: 'registered'
     },
     completionDate: {

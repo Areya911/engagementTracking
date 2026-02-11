@@ -176,6 +176,41 @@ export default function Activities() {
                   background: color
                 }} />
               </div>
+              <div style={{ marginTop: 12 }}>
+              {engagements
+                .filter(e => e.activity === act._id)
+                .map(e => (
+                  <div key={e._id} style={{
+                    background: "#f8fafc",
+                    padding: 8,
+                    marginTop: 6,
+                    borderRadius: 8
+                  }}>
+                    {e.user.name}
+
+                    <div style={{ marginTop: 6 }}>
+                      <button
+                        onClick={() =>
+                          API.put(`/engagements/${e._id}`, { status: "attended" })
+                            .then(fetchData)
+                        }
+                      >
+                        Attended
+                      </button>
+
+                      <button
+                        style={{ marginLeft: 8 }}
+                        onClick={() =>
+                          API.put(`/engagements/${e._id}`, { status: "absent" })
+                            .then(fetchData)
+                        }
+                      >
+                        Absent
+                      </button>
+                    </div>
+                  </div>
+                ))}
+            </div>
 
               <div style={actions}>
                 <Pencil size={16} onClick={() => openEdit(act)} style={iconBtn}/>

@@ -79,27 +79,8 @@ export default function UserDashboard() {
         ))}
       </div>
 
-      {/* RECOMMENDED */}
-      <h2 style={{ marginTop: 40 }}>Recommended For You</h2>
-
-      <div style={{
-        display: "grid",
-        gridTemplateColumns: "repeat(3,1fr)",
-        gap: 20,
-        marginTop: 15
-      }}>
-        {recommended.map((r, i) => (
-          <div key={i} style={card}>
-            <div style={{ height: 80, borderRadius: 10, background: "linear-gradient(45deg,#6d28d9,#4338ca)" }} />
-            <div style={{ padding: 15 }}>
-              <small style={{ color: "#777" }}>{r.tag}</small>
-              <h3>{r.name}</h3>
-              <button style={btn}>Explore</button>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
+      
+     </div>
   );
 }
 

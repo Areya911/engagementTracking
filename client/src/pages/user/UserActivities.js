@@ -1,91 +1,127 @@
+import { useEffect, useState } from "react";
+import API from "../../api/axios";
+
 export default function UserActivities() {
-  const activities = [
-    {
-      title: "Module 3 Quiz",
-      subject: "Data Structures",
-      type: "Quiz",
-      status: "In Progress",
-      score: "-",
-      due: "Dec 20, 2024"
-    },
-    {
-      title: "Assignment 2",
-      subject: "Machine Learning",
-      type: "Assignment",
-      status: "Submitted",
-      score: "92/100",
-      due: "Dec 18, 2024"
-    },
-    {
-      title: "Live Session Recording",
-      subject: "Advanced Analytics",
-      type: "Live Session",
-      status: "Attended",
-      score: "✓",
-      due: "Dec 15, 2024"
-    }
-  ];
+  const [myActivities, setMyActivities] = useState([]);
+  const [allActivities, setAllActivities] = useState([]);
+  const [showModal, setShowModal] = useState(false);
+
+  useEffect(() => {
+    loadMyActivities();
+  }, []);
+
+  const loadMyActivities = async () => {
+    const res = await API.get("/engagements/my");
+    setMyActivities(res.data);
+  };
+
+  const openRegister = async () => {
+    const res = await API.get("/activities");
+    setAllActivities(res.data);
+    setShowModal(true);
+  };
+
+  const register = async (activityId) => {
+    await API.post(`/engagements/register/${activityId}`);
+    setShowModal(false);
+    loadMyActivities();
+  };
 
   return (
     <div style={{ padding: 30, background: "#f8fafc", minHeight: "100vh" }}>
-      <h1 style={{ marginBottom: 20 }}>My Activities</h1>
+      
+      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 20 }}>
+        <h1>My Activities</h1>
+
+        <button onClick={openRegister} style={registerBtn}>
+          + Register Activity
+        </button>
+      </div>
 
       <div style={card}>
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead>
             <tr style={headerRow}>
-              <th style={th}>ACTIVITY</th>
-              <th style={th}>TYPE</th>
-              <th style={th}>STATUS</th>
-              <th style={th}>SCORE</th>
-              <th style={th}>DUE DATE</th>
+              <th style={th}>Activity</th>
+              <th style={th}>Category</th>
+              <th style={th}>Status</th>
             </tr>
           </thead>
 
           <tbody>
-            {activities.map((a, i) => (
-              <tr key={i} style={row}>
-                {/* ACTIVITY */}
+            {myActivities.map((e) => (
+              <tr key={e._id} style={row}>
                 <td style={td}>
-                  <div>
-                    <div style={{ fontWeight: 600 }}>{a.title}</div>
-                    <div style={{ fontSize: 12, color: "#64748b" }}>
-                      {a.subject}
-                    </div>
-                  </div>
+                  <b>{e.activity?.name}</b>
                 </td>
 
-                {/* TYPE */}
+                <td style={td}>{e.activity?.category}</td>
+
                 <td style={td}>
-                  <span style={typeBadge(a.type)}>{a.type}</span>
+                  <span style={statusBadge(e.attendanceStatus)}>
+                    {e.attendanceStatus}
+                  </span>
                 </td>
-
-                {/* STATUS */}
-                <td style={td}>
-                  <span style={statusBadge(a.status)}>{a.status}</span>
-                </td>
-
-                {/* SCORE */}
-                <td style={td}>{a.score}</td>
-
-                {/* DATE */}
-                <td style={td}>{a.due}</td>
               </tr>
             ))}
           </tbody>
         </table>
+
+        {myActivities.length === 0 && (
+          <p style={{ color: "#64748b", marginTop: 20 }}>
+            No activities registered yet.
+          </p>
+        )}
       </div>
+
+      {/* REGISTER MODAL */}
+      {showModal && (
+        <div style={overlay}>
+          <div style={modal}>
+            <h3>Register for Activity</h3>
+
+            {allActivities.map(a => (
+              <div key={a._id} style={activityCard}>
+                <div>
+                  <b>{a.name}</b>
+                  <p style={{ fontSize: 12, color: "#64748b" }}>{a.category}</p>
+                </div>
+
+                <button
+                  onClick={() => register(a._id)}
+                  style={smallBtn}
+                >
+                  Register
+                </button>
+              </div>
+            ))}
+
+            <button onClick={() => setShowModal(false)} style={cancelBtn}>
+              Close
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
-/* ---------- STYLES ---------- */
+/* STYLES */
 
 const card = {
   background: "white",
   borderRadius: 12,
   padding: 20,
   boxShadow: "0 4px 12px rgba(0,0,0,0.05)"
+};
+
+const registerBtn = {
+  background: "#6366f1",
+  color: "white",
+  border: "none",
+  padding: "10px 16px",
+  borderRadius: 8,
+  cursor: "pointer"
 };
 
 const headerRow = {
@@ -96,8 +132,7 @@ const headerRow = {
 const th = {
   padding: "12px 0",
   fontSize: 12,
-  color: "#64748b",
-  fontWeight: 600
+  color: "#64748b"
 };
 
 const row = {
@@ -108,37 +143,63 @@ const td = {
   padding: "16px 0"
 };
 
-/* TYPE COLORS */
-function typeBadge(type) {
-  const map = {
-    Quiz: "#22c55e",
-    Assignment: "#3b82f6",
-    "Live Session": "#ef4444"
-  };
+const statusBadge = (status) => ({
+  background:
+    status === "registered"
+      ? "#f59e0b"
+      : status === "attended"
+      ? "#10b981"
+      : "#ef4444",
+  color: "white",
+  padding: "4px 10px",
+  borderRadius: 20,
+  fontSize: 12
+});
 
-  return {
-    background: map[type],
-    color: "white",
-    padding: "4px 10px",
-    borderRadius: 20,
-    fontSize: 12,
-    fontWeight: 500
-  };
-}
+const overlay = {
+  position: "fixed",
+  inset: 0,
+  background: "rgba(0,0,0,0.3)",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center"
+};
 
-/* STATUS COLORS */
-function statusBadge(status) {
-  const map = {
-    "In Progress": "#f59e0b",
-    Submitted: "#22c55e",
-    Attended: "#10b981"
-  };
+const modal = {
+  background: "white",
+  padding: 30,
+  borderRadius: 12,
+  width: 400,
+  maxHeight: 500,
+  overflowY: "auto",
+  display: "flex",
+  flexDirection: "column",
+  gap: 12
+};
 
-  return {
-    background: map[status],
-    color: "white",
-    padding: "4px 10px",
-    borderRadius: 20,
-    fontSize: 12
-  };
-}
+const activityCard = {
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+  padding: 12,
+  border: "1px solid #eee",
+  borderRadius: 8
+};
+
+const smallBtn = {
+  background: "#22c55e",
+  color: "white",
+  border: "none",
+  padding: "6px 12px",
+  borderRadius: 6,
+  cursor: "pointer"
+};
+
+const cancelBtn = {
+  marginTop: 10,
+  background: "#ef4444",
+  color: "white",
+  border: "none",
+  padding: "8px 12px",
+  borderRadius: 6
+};

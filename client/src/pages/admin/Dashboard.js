@@ -103,42 +103,42 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* ACTIVITY FILTER */}
-      <div style={{ marginTop: 50 }}>
-        <h2>Top Activities</h2>
+          {/* ACTIVITY FILTER */}
+          <div style={{ marginTop: 50 }}>
+            <h2>Top Activities</h2>
 
-        <input
-          placeholder="Filter activity..."
-          value={filter}
-          onChange={(e) => setFilter(e.target.value)}
-          style={{
-            padding: 8,
-            marginBottom: 15,
-            borderRadius: 6,
-            border: "1px solid #ccc"
-          }}
-        />
+            <input
+              placeholder="Filter activity..."
+              value={filter}
+              onChange={(e) => setFilter(e.target.value)}
+              style={{
+                padding: 8,
+                marginBottom: 15,
+                borderRadius: 6,
+                border: "1px solid #ccc"
+              }}
+            />
 
-        {filteredActivities.map((act, index) => {
-          const max = stats.activityStats[0]?.participants || 1;
-          const percent = (act.participants / max) * 100;
-
-          return (
-            <div key={index} className="list-box">
-              <b>{activityMap[act._id] || "Unknown Activity"}</b>
-              <br />
-              Participants: {act.participants}
-
-              <div className="progress-bar">
-                <div
-                  className="progress-fill"
-                  style={{ width: percent + "%" }}
-                />
+            {filteredActivities.map((act, index) => (
+              <div
+                key={index}
+                style={{
+                  background: "white",
+                  padding: 16,
+                  borderRadius: 10,
+                  marginBottom: 12,
+                  boxShadow: "0 2px 8px rgba(0,0,0,0.05)"
+                }}
+              >
+                <b>{activityMap[act._id] || "Unknown Activity"}</b>
+                <br />
+                <span style={{ color: "#64748b" }}>
+                  Participants: {act.participants}
+                </span>
               </div>
-            </div>
-          );
-        })}
-      </div>
+            ))}
+          </div>
+
 
       {/* USER ENGAGEMENT RANKING */}
       <div style={{ marginTop: 50 }}>

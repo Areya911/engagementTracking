@@ -49,3 +49,15 @@ exports.getAllEngagements = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
+
+// User gets ONLY their activities
+exports.getMyEngagements = async (req, res) => {
+    try {
+        const data = await Engagement.find({ user: req.user._id })
+            .populate('activity', 'name category');
+
+        res.json(data);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
