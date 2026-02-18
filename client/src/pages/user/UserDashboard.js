@@ -1,53 +1,44 @@
 import { useEffect, useState } from "react";
+import API from "../../api/axios";
 
 export default function UserDashboard() {
   const [activities, setActivities] = useState([]);
-  const [recommended, setRecommended] = useState([]);
+  const [userName, setUserName] = useState("");
 
   useEffect(() => {
-    // Temporary mock data
-    setActivities([
-      {
-        title: "Module 3 Assessment",
-        type: "Quiz",
-        subject: "Data Structures & Algorithms",
-        progress: 75,
-        due: "Due: 2 days"
-      },
-      {
-        title: "Project Proposal",
-        type: "Assignment",
-        subject: "Final Year Research Project",
-        progress: 40,
-        due: "Due: 5 days"
-      },
-      {
-        title: "AI Ethics Forum",
-        type: "Discussion",
-        subject: "3 new posts waiting",
-        progress: 0,
-        status: "Active Now"
-      },
-      {
-        title: "Data Science Masterclass",
-        type: "Live Session",
-        subject: "Dr. Smith - Advanced Analytics",
-        progress: 0,
-        status: "Starting in 2h"
-      }
-    ]);
-
-    setRecommended([
-      { name: "Advanced Python", tag: "Python • Beginner" },
-      { name: "ML Basics", tag: "Machine Learning • Advanced" },
-      { name: "React Masterclass", tag: "Web Dev • Intermediate" }
-    ]);
+    loadUser();
+    loadMyActivities();
   }, []);
+
+  const loadUser = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await API.get("/auth/me", {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setUserName(res.data.name);
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  const loadMyActivities = async () => {
+    const res = await API.get("/engagements/my");
+    setActivities(res.data);
+  };
+
+  const openVideo = (activity) => {
+    // TEMP default video (you can later store per activity in DB)
+    window.open("https://www.youtube.com/watch?v=dQw4w9WgXcQ", "_blank");
+  };
 
   return (
     <div style={{ padding: 30 }}>
+      
       {/* HEADER */}
-      <h1 style={{ marginBottom: 5 }}>Welcome back, Sarah! 👋</h1>
+      <h1 style={{ marginBottom: 5 }}>
+        Welcome back, {userName || "User"}! 👋
+      </h1>
       <p style={{ color: "#777" }}>
         Here's your learning journey at a glance
       </p>
@@ -59,28 +50,37 @@ export default function UserDashboard() {
         gap: 20,
         marginTop: 25
       }}>
-        <StatCard title="Learning Time" value="8.5h" subtitle="This Week" />
-        <StatCard title="Tasks Completed" value="12" subtitle="Completed" />
-        <StatCard title="Overall Progress" value="84%" subtitle="Average" />
-        <StatCard title="Days Active" value="12" subtitle="Streak 🔥" />
+        <StatCard title="Learning Time" value="--" subtitle="This Week" />
+        <StatCard title="Tasks Completed" value={activities.length} subtitle="Enrolled" />
+        <StatCard title="Overall Progress" value="0%" subtitle="Average" />
+        <StatCard title="Days Active" value="--" subtitle="Streak 🔥" />
       </div>
 
       {/* CURRENT ACTIVITIES */}
       <h2 style={{ marginTop: 40 }}>Your Current Activities</h2>
 
-      <div style={{
-        display: "grid",
-        gridTemplateColumns: "repeat(2,1fr)",
-        gap: 20,
-        marginTop: 15
-      }}>
-        {activities.map((a, i) => (
-          <ActivityCard key={i} data={a} />
-        ))}
-      </div>
-
-      
-     </div>
+      {activities.length === 0 ? (
+        <p style={{ color: "#777", marginTop: 10 }}>
+          No activities enrolled yet. Go to Activities page and register.
+        </p>
+      ) : (
+        <div style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
+          gap: 20,
+          marginTop: 15
+        }}>
+          {activities.map((e, i) => (
+            <ActivityCard
+              key={i}
+              activity={e.activity}
+              status={e.attendanceStatus}
+              onOpen={() => openVideo(e.activity)}
+            />
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -96,31 +96,26 @@ function StatCard({ title, value, subtitle }) {
 }
 
 /* ACTIVITY CARD */
-function ActivityCard({ data }) {
+function ActivityCard({ activity, status, onOpen }) {
+  const progress = status === "completed" ? 100 : 0;
+
   return (
     <div style={card}>
-      <small style={{ color: "#6366f1" }}>{data.type}</small>
-      <h3>{data.title}</h3>
-      <p style={{ color: "#777" }}>{data.subject}</p>
+      <small style={{ color: "#6366f1" }}>{activity?.category}</small>
+      <h3>{activity?.name}</h3>
+      <p style={{ color: "#777" }}>{activity?.description}</p>
 
-      {data.progress > 0 && (
-        <>
-          <div style={progressBg}>
-            <div style={{
-              ...progressFill,
-              width: `${data.progress}%`
-            }} />
-          </div>
-          <small>{data.progress}%</small>
-        </>
-      )}
+      <div style={progressBg}>
+        <div style={{
+          ...progressFill,
+          width: `${progress}%`
+        }} />
+      </div>
 
-      <button style={btn}>
-        {data.type === "Discussion"
-          ? "Join Discussion"
-          : data.type === "Live Session"
-          ? "Set Reminder"
-          : "Continue"}
+      <small>{progress}%</small>
+
+      <button style={btn} onClick={onOpen}>
+        Start Learning
       </button>
     </div>
   );
@@ -145,14 +140,16 @@ const btn = {
 };
 
 const progressBg = {
-  height: 8,
+  height: 10,
   background: "#eee",
   borderRadius: 10,
-  marginTop: 10
+  marginTop: 10,
+  overflow: "hidden"
 };
 
 const progressFill = {
   height: "100%",
   background: "#8b5cf6",
-  borderRadius: 10
+  borderRadius: 10,
+  transition: "width 0.4s ease"
 };
