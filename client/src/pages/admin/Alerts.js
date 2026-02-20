@@ -2,217 +2,120 @@ import { useEffect, useState } from "react";
 import API from "../../api/axios";
 
 export default function Alerts() {
-  const [users, setUsers] = useState([]);
-  const [engagements, setEngagements] = useState([]);
-  const [showInactiveList, setShowInactiveList] = useState(false);
-  const [showDropList, setShowDropList] = useState(false);
+
+  const [alerts, setAlerts] = useState([]);
 
   useEffect(() => {
-    API.get("/users").then(res => setUsers(res.data));
-    API.get("/engagements").then(res => setEngagements(res.data));
+    loadAlerts();
   }, []);
 
-  const now = new Date();
+  const loadAlerts = async () => {
+    const res = await API.get("/dashboard/alerts");
+    setAlerts(res.data);
+  };
 
-  // -----------------------------
-  // LAST ACTIVITY PER USER
-  // -----------------------------
-  const lastActivityMap = {};
-
-  engagements.forEach(e => {
-    const date = new Date(e.createdAt);
-    if (!lastActivityMap[e.user] || lastActivityMap[e.user] < date) {
-      lastActivityMap[e.user] = date;
-    }
-  });
-
-  // -----------------------------
-  // INACTIVE USERS (7+ days)
-  // -----------------------------
-  const inactiveUsers = users.filter(u => {
-    const last = lastActivityMap[u._id];
-    if (!last) return true;
-
-    const diffDays = (now - last) / (1000 * 60 * 60 * 24);
-    return diffDays >= 7;
-  });
-
-  // -----------------------------
-  // COMPLETION RATE
-  // -----------------------------
-  const completed = engagements.filter(e => e.status === "completed").length;
-  const completionRate = engagements.length
-    ? Math.round((completed / engagements.length) * 100)
-    : 0;
-
-  const engagementDrop = completionRate < 50;
-
-  // Users with low performance (<30% completion)
-  const dropRiskUsers = users.filter(u => {
-    const userEng = engagements.filter(e => e.user === u._id);
-    if (userEng.length === 0) return false;
-
-    const done = userEng.filter(e => e.status === "completed").length;
-    const score = (done / userEng.length) * 100;
-    return score < 30;
-  });
+  const highRisk = alerts.filter(a => a.riskLevel === "high");
+  const moderateRisk = alerts.filter(a => a.riskLevel === "moderate");
+  const healthy = alerts.filter(a => a.riskLevel === "healthy");
 
   return (
-    <div style={{ padding: 30 }}>
-      <h1>Alerts & Notifications</h1>
+    <div>
 
-      {/* CRITICAL */}
-      {engagementDrop && (
-        <AlertCard
-          color="#fee2e2"
-          border="#ef4444"
-          title="Critical: Engagement Drop Detected"
-          message={`Completion rate is ${completionRate}%. Users may be disengaging.`}
-          time="Recent"
-          actions={[
-            {
-              label: "View Affected Users",
-              primary: true,
-              onClick: () => setShowDropList(!showDropList)
-            },
-            { label: "Dismiss" }
-          ]}
-        />
-      )}
+      <h1>Alerts</h1>
 
-      {/* WARNING */}
-      <AlertCard
-        color="#fef3c7"
-        border="#f59e0b"
-        title={`Warning: ${inactiveUsers.length} Users Inactive 7+ Days`}
-        message="These users haven’t participated recently."
-        time="Recent"
-        actions={[
-          {
-            label: "Send Reminder",
-            primary: true,
-            onClick: () => alert("Reminder emails triggered (simulation)")
-          },
-          {
-            label: "View List",
-            onClick: () => setShowInactiveList(!showInactiveList)
-          }
-        ]}
-      />
-
-      {/* INFO */}
-      <AlertCard
-        color="#dbeafe"
-        border="#3b82f6"
-        title="Info: Weekly Report Ready"
-        message="Your weekly engagement summary is ready."
-        time="1 day ago"
-        actions={[
-          { label: "Download Report", primary: true },
-          { label: "View Details" }
-        ]}
-      />
-
-      {/* SUCCESS */}
-      {completionRate >= 75 && (
-        <AlertCard
-          color="#dcfce7"
-          border="#22c55e"
-          title="Success: Milestone Reached!"
-          message={`Engagement crossed ${completionRate}% completion.`}
-          time="2 days ago"
-          actions={[
-            { label: "View Analytics", primary: true },
-            { label: "Share Achievement" }
-          ]}
-        />
-      )}
-
-      {/* INACTIVE USERS PANEL */}
-      {showInactiveList && (
-        <UserPanel
-          title="Inactive Users (7+ days)"
-          users={inactiveUsers}
-        />
-      )}
-
-      {/* DROP RISK USERS PANEL */}
-      {showDropList && (
-        <UserPanel
-          title="Low Engagement Users"
-          users={dropRiskUsers}
-        />
-      )}
-    </div>
-  );
-}
-
-// -----------------------------
-// ALERT CARD
-// -----------------------------
-function AlertCard({ color, border, title, message, actions, time }) {
-  return (
-    <div style={{
-      background: color,
-      border: `1px solid ${border}`,
-      padding: 20,
-      borderRadius: 12,
-      marginTop: 20
-    }}>
-      <div style={{ display: "flex", justifyContent: "space-between" }}>
-        <h3 style={{ margin: 0 }}>{title}</h3>
-        <small>{time}</small>
+      {/* Summary Cards */}
+      <div style={cardRow}>
+        <StatCard value={highRisk.length} label="High Risk" color="#ef4444" />
+        <StatCard value={moderateRisk.length} label="Moderate Risk" color="#f59e0b" />
+        <StatCard value={alerts.length} label="Total Students" color="#10b981" />
       </div>
 
-      <p style={{ marginTop: 8 }}>{message}</p>
+      {/* Active Alerts */}
+      <div style={box}>
+        <h2>Active Alerts</h2>
 
-      <div style={{ display: "flex", gap: 10, marginTop: 10 }}>
-        {actions.map((btn, i) => (
-          <button
-            key={i}
-            onClick={btn.onClick}
-            style={{
-              background: btn.primary ? border : "white",
-              color: btn.primary ? "white" : border,
-              border: `1px solid ${border}`,
-              padding: "6px 14px",
-              borderRadius: 8,
-              cursor: "pointer"
-            }}
-          >
-            {btn.label}
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-}
+        {alerts.map(student => (
+          <div key={student._id} style={row}>
+            <div>
+              <strong>{student.name}</strong>
+              <div style={{ fontSize: 13 }}>Score: {student.score}</div>
+            </div>
 
-// -----------------------------
-// USER LIST PANEL
-// -----------------------------
-function UserPanel({ title, users }) {
-  return (
-    <div style={{
-      background: "white",
-      padding: 20,
-      borderRadius: 12,
-      marginTop: 25
-    }}>
-      <h3>{title}</h3>
-
-      {users.length === 0 ? (
-        <p>No users found.</p>
-      ) : (
-        users.map(u => (
-          <div key={u._id} style={{
-            padding: 10,
-            borderBottom: "1px solid #eee"
-          }}>
-            <b>a{u.name}</b> — {u.email}
+            <div>
+              <RiskBadge level={student.riskLevel} />
+              <button style={notifyBtn}>Notify</button>
+            </div>
           </div>
-        ))
-      )}
+        ))}
+
+      </div>
+
     </div>
   );
 }
+
+function StatCard({ value, label, color }) {
+  return (
+    <div style={{ ...card, borderLeft: `6px solid ${color}` }}>
+      <h2 style={{ color }}>{value}</h2>
+      <p>{label}</p>
+    </div>
+  );
+}
+
+function RiskBadge({ level }) {
+  const config = {
+    high: { text: "Low Engagement", color: "#ef4444" },
+    moderate: { text: "At Risk", color: "#f59e0b" },
+    healthy: { text: "High Performer", color: "#10b981" }
+  };
+
+  return (
+    <span style={{
+      background: config[level].color + "20",
+      color: config[level].color,
+      padding: "6px 12px",
+      borderRadius: 20,
+      marginRight: 10,
+      fontSize: 13
+    }}>
+      {config[level].text}
+    </span>
+  );
+}
+
+/* styles */
+
+const cardRow = {
+  display: "flex",
+  gap: 20,
+  marginBottom: 30
+};
+
+const card = {
+  background: "white",
+  padding: 20,
+  borderRadius: 15,
+  minWidth: 200
+};
+
+const box = {
+  background: "white",
+  padding: 25,
+  borderRadius: 20
+};
+
+const row = {
+  display: "flex",
+  justifyContent: "space-between",
+  padding: 15,
+  borderBottom: "1px solid #eee"
+};
+
+const notifyBtn = {
+  background: "#5a4de1",
+  color: "white",
+  border: "none",
+  padding: "6px 12px",
+  borderRadius: 8
+};
