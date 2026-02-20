@@ -31,7 +31,10 @@ const userSchema = new mongoose.Schema({
     engagementScore: {
         type: Number,
         default: 0
-    }
+    } ,
+    institution: {
+  type: String
+}
 
 }, { timestamps: true });
 

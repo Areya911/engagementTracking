@@ -20,4 +20,5 @@ router.get('/:id', protect, async (req, res) => {
 router.put('/profile', protect, updateProfile);
 
 router.get("/report/:id", protect, isAdmin, getStudentReport);
+
 module.exports = router;
