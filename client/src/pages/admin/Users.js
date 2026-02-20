@@ -1,157 +1,200 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import API from "../../api/axios";
 
 export default function Users() {
+
   const [users, setUsers] = useState([]);
   const [engagements, setEngagements] = useState([]);
+  const [search, setSearch] = useState("");
+  const navigate = useNavigate();
 
   useEffect(() => {
-    API.get("/users").then(res => setUsers(res.data));
-    API.get("/engagements").then(res => setEngagements(res.data));
+    loadData();
   }, []);
 
-  // Calculate engagement score per user
-  const getUserScore = (userId) => {
-    const userEng = engagements.filter(e => e.user === userId);
+  const loadData = async () => {
+    const userRes = await API.get("/users");
+    const engRes = await API.get("/engagements");
 
-    if (userEng.length === 0) return 0;
-
-    const completed = userEng.filter(e => e.status === "completed").length;
-    return Math.round((completed / userEng.length) * 100);
+    setUsers(userRes.data.filter(u => u.role === "user"));
+    setEngagements(engRes.data);
   };
 
-  const getStatus = (score) => {
-    if (score >= 70) return { text: "Active", color: "#22c55e" };
-    if (score >= 40) return { text: "Moderate", color: "#f59e0b" };
-    return { text: "Inactive", color: "#ef4444" };
+  // =============================
+  // LIVE ACTIVITY COUNTS
+  // =============================
+
+  const getStats = (userId) => {
+    const userEng = engagements.filter(e => e.user?._id === userId);
+
+    const quiz = userEng.filter(e => e.activity?.category === "Quiz").length;
+    const hack = userEng.filter(e => e.activity?.category === "Hackathon").length;
+    const conf = userEng.filter(e => e.activity?.category === "Conference").length;
+
+    return { quiz, hack, conf };
   };
 
-  const getInitials = (name) => {
-    if (!name) return "U";
-    const parts = name.split(" ");
-    return parts.length === 1
-      ? parts[0][0]
-      : parts[0][0] + parts[1][0];
+  const getSignal = (score) => {
+    if (score >= 70) return { label: "Healthy", color: "#10b981" };
+    if (score >= 40) return { label: "Moderate", color: "#f59e0b" };
+    return { label: "At Risk", color: "#ef4444" };
   };
+
+  const filtered = users.filter(u =>
+    u.name.toLowerCase().includes(search.toLowerCase()) ||
+    u.department.toLowerCase().includes(search.toLowerCase())
+  );
 
   return (
-    <div style={{ padding: 30 }}>
+    <div>
+
       <h1>User Management</h1>
+      <p style={{ color: "#777" }}>{filtered.length} students</p>
 
-      <div style={{
-        background: "white",
-        padding: 20,
-        borderRadius: 12,
-        marginTop: 20,
-        boxShadow: "0 2px 8px rgba(0,0,0,0.05)"
-      }}>
-        <table style={{ width: "100%", borderCollapse: "collapse" }}>
-          <thead>
-            <tr style={{ textAlign: "left", borderBottom: "1px solid #eee" }}>
-              <th>User</th>
-              <th>Department</th>
-              <th>Engagement</th>
-              <th>Status</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
+      <input
+        placeholder="Search name or department..."
+        value={search}
+        onChange={e => setSearch(e.target.value)}
+        style={searchBox}
+      />
 
-          <tbody>
-            {users.map(user => {
-              const score = getUserScore(user._id);
-              const status = getStatus(score);
+      <div style={table}>
+        <div style={headerRow}>
+          <div>Student</div>
+          <div>Department</div>
+          <div>Score</div>
+          <div>Activities</div>
+          <div>Signal</div>
+          <div>Action</div>
+        </div>
 
-              return (
-                <tr key={user._id} style={{ borderBottom: "1px solid #f1f1f1" }}>
-                  
-                  {/* USER INFO */}
-                  <td style={{ padding: "14px 0" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                      
-                      {/* Avatar */}
-                      <div style={{
-                        width: 40,
-                        height: 40,
-                        borderRadius: "50%",
-                        background: "#6366f1",
-                        color: "white",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        fontWeight: "bold"
-                      }}>
-                        {getInitials(user.name)}
-                      </div>
+        {filtered.map(u => {
+          const stats = getStats(u._id);
+          const signal = getSignal(u.engagementScore || 0);
 
-                      {/* Name + Email */}
-                      <div>
-                        <div style={{ fontWeight: 600 }}>{user.name}</div>
-                        <div style={{ fontSize: 12, color: "#777" }}>
-                          {user.email}
-                        </div>
-                      </div>
-                    </div>
-                  </td>
+          return (
+            <div key={u._id} style={row}>
 
-                  {/* DEPARTMENT */}
-                  <td>{user.department || "General"}</td>
+              <div>
+                <strong>{u.name}</strong>
+                <div style={{ fontSize: 12, color: "#777" }}>{u.email}</div>
+              </div>
 
-                  {/* ENGAGEMENT BAR */}
-                  <td style={{ width: 220 }}>
-                    <div style={{
-                      background: "#eee",
-                      borderRadius: 10,
-                      height: 8,
-                      width: 160
-                    }}>
-                      <div style={{
-                        width: `${score}%`,
-                        height: "100%",
-                        background:
-                          score >= 70 ? "#22c55e" :
-                          score >= 40 ? "#f59e0b" :
-                          "#ef4444",
-                        borderRadius: 10
-                      }} />
-                    </div>
-                    <small>{score}%</small>
-                  </td>
+              <div>{u.department}</div>
 
-                  {/* STATUS */}
-                  <td>
-                    <span style={{
-                      background: status.color,
-                      color: "white",
-                      padding: "4px 12px",
-                      borderRadius: 20,
-                      fontSize: 12,
-                      fontWeight: 500
-                    }}>
-                      {status.text}
-                    </span>
-                  </td>
+              <div>
+                <ScoreCircle score={u.engagementScore || 0} />
+              </div>
 
-                  {/* ACTIONS */}
-                  <td>
-                    <Link
-                      to={`/admin/users/${user._id}`}
-                      style={{
-                        color: "#6c6eda",
-                        fontWeight: 600,
-                        textDecoration: "none"
-                      }}
-                    >
-                      View Profile
-                    </Link>
-                  </td>
+              <div>
+                <Chip label={`Quiz: ${stats.quiz}`} />
+                <Chip label={`Hack: ${stats.hack}`} />
+                <Chip label={`Conf: ${stats.conf}`} />
+              </div>
 
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+              <div style={{ color: signal.color }}>
+                ● {signal.label}
+              </div>
+
+              <div>
+                <button
+                  style={btn}
+                  onClick={() => navigate(`/admin/users/${u._id}`)}
+                >
+                  View Profile
+                </button>
+              </div>
+
+            </div>
+          );
+        })}
       </div>
+
     </div>
   );
 }
+
+// =======================
+// COMPONENTS
+// =======================
+
+function ScoreCircle({ score }) {
+
+  const color =
+    score >= 70 ? "#10b981"
+    : score >= 40 ? "#f59e0b"
+    : "#ef4444";
+
+  return (
+    <div style={{
+      width: 60,
+      height: 60,
+      borderRadius: "50%",
+      border: `4px solid ${color}`,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      color
+    }}>
+      <strong>{score}</strong>
+    </div>
+  );
+}
+
+function Chip({ label }) {
+  return (
+    <span style={{
+      background: "#e5e7eb",
+      padding: "4px 10px",
+      borderRadius: 20,
+      fontSize: 12,
+      marginRight: 6
+    }}>
+      {label}
+    </span>
+  );
+}
+
+// =======================
+// STYLES
+// =======================
+
+const table = {
+  background: "white",
+  marginTop: 20,
+  borderRadius: 15,
+  padding: 20
+};
+
+const headerRow = {
+  display: "grid",
+  gridTemplateColumns: "2fr 1fr 1fr 2fr 1fr 1fr",
+  fontWeight: 600,
+  marginBottom: 15
+};
+
+const row = {
+  display: "grid",
+  gridTemplateColumns: "2fr 1fr 1fr 2fr 1fr 1fr",
+  alignItems: "center",
+  padding: "15px 0",
+  borderTop: "1px solid #eee"
+};
+
+const btn = {
+  padding: "6px 12px",
+  borderRadius: 8,
+  border: "none",
+  background: "#5a4de1",
+  color: "white",
+  cursor: "pointer"
+};
+
+const searchBox = {
+  marginTop: 15,
+  padding: 10,
+  width: 300,
+  borderRadius: 8,
+  border: "1px solid #ddd"
+};

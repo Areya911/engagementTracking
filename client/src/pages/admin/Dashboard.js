@@ -6,184 +6,228 @@ import {
   XAxis,
   YAxis,
   Tooltip,
-  CartesianGrid,
-  ResponsiveContainer
+  ResponsiveContainer,
+  CartesianGrid
 } from "recharts";
 
 export default function Dashboard() {
-  const [stats, setStats] = useState(null);
+
   const [users, setUsers] = useState([]);
-  const [activities, setActivities] = useState([]);
   const [engagements, setEngagements] = useState([]);
-  const [filter, setFilter] = useState("");
+  const [trendData, setTrendData] = useState([]);
 
   useEffect(() => {
-    API.get("/dashboard").then(res => setStats(res.data));
-    API.get("/users").then(res => setUsers(res.data));
-    API.get("/activities").then(res => setActivities(res.data));
-    API.get("/engagements").then(res => setEngagements(res.data));
+    loadData();
   }, []);
 
-  if (!stats) return <h2>Loading...</h2>;
+  const loadData = async () => {
+    const userRes = await API.get("/users");
+    const engRes = await API.get("/engagements");
 
-  // Map activityId -> activityName
-  const activityMap = {};
-  activities.forEach(a => {
-    activityMap[a._id] = a.name;
-  });
+    setUsers(userRes.data);
+    setEngagements(engRes.data);
 
-  // Engagement status stats map
-  const engagementMap = {};
-  stats.statusStats.forEach(s => {
-    engagementMap[s._id] = s.count;
-  });
+    generateTrend(engRes.data);
+  };
 
-  // -------- USER ENGAGEMENT RANKING --------
-  const userScore = {};
-  engagements.forEach(e => {
-    const name = e.user?.name || "Unknown";
-    userScore[name] = (userScore[name] || 0) + 1;
-  });
+  // ===============================
+  // LIVE METRICS CALCULATIONS
+  // ===============================
 
-  const topUsers = Object.entries(userScore)
-    .map(([name, score]) => ({ name, score }))
-    .sort((a, b) => b.score - a.score)
-    .slice(0, 5);
+  const totalStudents = users.filter(u => u.role === "user").length;
 
-  // -------- FILTERED ACTIVITIES --------
-  const filteredActivities = stats.activityStats
-    .filter(a =>
-      activityMap[a._id]?.toLowerCase().includes(filter.toLowerCase())
-    )
-    .sort((a, b) => b.participants - a.participants)
-    .slice(0, 5);
+  const activeToday = engagements.filter(e => {
+    const today = new Date().toDateString();
+    return new Date(e.updatedAt).toDateString() === today;
+  }).length;
 
-  // -------- LINE CHART DATA (simulated growth) --------
-  const lineData = stats.statusStats.map(s => ({
-    name: s._id,
-    value: s.count
-  }));
+  const avgEngagement =
+    users.length === 0
+      ? 0
+      : Math.round(
+          users.reduce((acc, u) => acc + (u.engagementScore || 0), 0) /
+          users.length
+        );
+
+  const atRisk = users.filter(
+    u => u.role === "user" && (u.engagementScore || 0) < 30
+  ).length;
+
+  // ===============================
+  // TREND GENERATOR (REAL DATA)
+  // ===============================
+
+  const generateTrend = (engData) => {
+    const monthlyMap = {};
+
+    engData.forEach(e => {
+      const month = new Date(e.createdAt).toLocaleString("default", {
+        month: "short"
+      });
+
+      monthlyMap[month] = (monthlyMap[month] || 0) + 1;
+    });
+
+    const formatted = Object.keys(monthlyMap).map(m => ({
+      month: m,
+      value: monthlyMap[m]
+    }));
+
+    setTrendData(formatted);
+  };
+
+  // ===============================
+  // PREDICTION LOGIC
+  // ===============================
+
+  const dropOffUsers = users.filter(
+    u => u.role === "user" && (u.engagementScore || 0) < 30
+  );
+
+  const highPerformers = users
+    .filter(u => (u.engagementScore || 0) >= 70)
+    .slice(0, 2);
+
+  // ===============================
 
   return (
     <div>
-      <h1>Dashboard Overview</h1>
 
-      {/* STAT CARDS */}
-      <div className="card-grid">
-        <Card title="Total Users" value={stats.totalUsers} />
-        <Card title="Active Projects" value={stats.totalActivities} />
-        <Card title="Total Engagements" value={stats.totalEngagements} />
-        <Card title="Completion Rate" value="78%" />
+      <h1 style={{ fontSize: 28 }}>Dashboard</h1>
+      <p style={{ color: "#777", marginBottom: 30 }}>
+        EduTrack — Admin Panel
+      </p>
+
+      {/* HERO */}
+      <div style={hero}>
+        <h2 style={{ margin: 0 }}>
+          Good morning, Admin
+        </h2>
+        <p style={{ opacity: 0.9 }}>
+          Here is what is happening across your institution today.
+        </p>
       </div>
 
-      {/* ENGAGEMENT STATS */}
-      <div style={{ marginTop: 40 }}>
-        <h2>Engagement Stats</h2>
-
-        <div className="card-grid" style={{ gridTemplateColumns: "repeat(3,1fr)" }}>
-          <Card title="Registered" value={engagementMap.registered || 0} />
-          <Card title="Attended" value={engagementMap.attended || 0} />
-          <Card title="Completed" value={engagementMap.completed || 0} />
-        </div>
+      {/* STATS */}
+      <div style={statsGrid}>
+        <StatCard color="#5a4de1" value={totalStudents} label="Total Students" />
+        <StatCard color="#10b981" value={activeToday} label="Active Today" />
+        <StatCard color="#f59e0b" value={avgEngagement} label="Avg Engagement" />
+        <StatCard color="#ef4444" value={atRisk} label="At Risk Students" />
       </div>
 
-      {/* LINE CHART */}
-      <div style={{ marginTop: 50 }}>
-        <h2>Engagement Growth</h2>
-        <div style={{ height: 300, background: "white", padding: 20, borderRadius: 12 }}>
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={lineData}>
+      {/* LOWER SECTION */}
+      <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 20 }}>
+
+        {/* TREND */}
+        <div style={card}>
+          <h3>Engagement Trend</h3>
+
+          <ResponsiveContainer width="100%" height={300}>
+            <LineChart data={trendData}>
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
+              <XAxis dataKey="month" />
               <YAxis />
               <Tooltip />
-              <Line type="monotone" dataKey="value" stroke="#4f46e5" strokeWidth={3} />
+              <Line
+                type="monotone"
+                dataKey="value"
+                stroke="#5a4de1"
+                strokeWidth={3}
+              />
             </LineChart>
           </ResponsiveContainer>
         </div>
-      </div>
 
-          {/* ACTIVITY FILTER */}
-          <div style={{ marginTop: 50 }}>
-            <h2>Top Activities</h2>
-
-            <input
-              placeholder="Filter activity..."
-              value={filter}
-              onChange={(e) => setFilter(e.target.value)}
-              style={{
-                padding: 8,
-                marginBottom: 15,
-                borderRadius: 6,
-                border: "1px solid #ccc"
-              }}
-            />
-
-            {filteredActivities.map((act, index) => (
-              <div
-                key={index}
-                style={{
-                  background: "white",
-                  padding: 16,
-                  borderRadius: 10,
-                  marginBottom: 12,
-                  boxShadow: "0 2px 8px rgba(0,0,0,0.05)"
-                }}
-              >
-                <b>{activityMap[act._id] || "Unknown Activity"}</b>
-                <br />
-                <span style={{ color: "#64748b" }}>
-                  Participants: {act.participants}
-                </span>
-              </div>
+        {/* PREDICTIONS */}
+        <div>
+          <div style={predictionCard("#fee2e2", "#ef4444")}>
+            <h4>Drop-off Risk</h4>
+            <p>{dropOffUsers.length} students likely to disengage</p>
+            {dropOffUsers.slice(0, 2).map(u => (
+              <Tag key={u._id}>{u.name}</Tag>
             ))}
           </div>
 
-
-      {/* USER ENGAGEMENT RANKING */}
-      <div style={{ marginTop: 50 }}>
-        <h2>Top Active Users</h2>
-
-        {topUsers.map((u, index) => (
-          <div key={index} className="list-box">
-            <b>{u.name}</b>
-            <br />
-            Engagement Score: {u.score}
+          <div style={predictionCard("#fef3c7", "#f59e0b")}>
+            <h4>Peak Hours</h4>
+            <p>Highest engagement between 6PM and 9PM</p>
           </div>
-        ))}
-      </div>
 
-      {/* RECENT USERS */}
-      <div style={{ marginTop: 50 }}>
-        <h2>Recent Users</h2>
-
-        {users.slice(0, 5).map(u => (
-          <div key={u._id} className="list-box">
-            <b>{u.name}</b> — {u.email} — {u.role}
+          <div style={predictionCard("#dcfce7", "#10b981")}>
+            <h4>High Performers</h4>
+            {highPerformers.map(u => (
+              <Tag key={u._id}>{u.name}</Tag>
+            ))}
           </div>
-        ))}
-      </div>
+        </div>
 
-      {/* RECENT ACTIVITIES */}
-      <div style={{ marginTop: 50 }}>
-        <h2>Recent Activities</h2>
-
-        {activities.slice(0, 5).map(a => (
-          <div key={a._id} className="list-box">
-            <b>{a.name}</b>
-            <p>{a.category}</p>
-          </div>
-        ))}
       </div>
     </div>
   );
 }
 
-function Card({ title, value }) {
+// ===============================
+// COMPONENTS
+// ===============================
+
+function StatCard({ color, value, label }) {
   return (
-    <div className="card">
-      <h4>{title}</h4>
-      <h2>{value}</h2>
+    <div style={{
+      background: "white",
+      padding: 20,
+      borderRadius: 20,
+      borderLeft: `6px solid ${color}`
+    }}>
+      <h2 style={{ color }}>{value}</h2>
+      <p style={{ color: "#555" }}>{label}</p>
     </div>
   );
 }
+
+function Tag({ children }) {
+  return (
+    <span style={{
+      background: "#e5e7eb",
+      padding: "6px 12px",
+      borderRadius: 20,
+      fontSize: 12,
+      marginRight: 6
+    }}>
+      {children}
+    </span>
+  );
+}
+
+// ===============================
+// STYLES
+// ===============================
+
+const hero = {
+  background: "linear-gradient(90deg,#5a4de1,#7c6bff)",
+  padding: 30,
+  borderRadius: 25,
+  color: "white",
+  marginBottom: 30
+};
+
+const statsGrid = {
+  display: "grid",
+  gridTemplateColumns: "repeat(4,1fr)",
+  gap: 20,
+  marginBottom: 30
+};
+
+const card = {
+  background: "white",
+  padding: 25,
+  borderRadius: 25
+};
+
+const predictionCard = (bg, border) => ({
+  background: bg,
+  padding: 20,
+  borderRadius: 20,
+  borderLeft: `6px solid ${border}`,
+  marginBottom: 20
+});
