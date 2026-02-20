@@ -26,6 +26,11 @@ const userSchema = new mongoose.Schema({
     department: {
         type: String,
         default: 'General'
+    },
+
+    engagementScore: {
+        type: Number,
+        default: 0
     }
 
 }, { timestamps: true });
