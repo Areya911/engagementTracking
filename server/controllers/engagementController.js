@@ -81,16 +81,19 @@ exports.updateProgress = async (req, res) => {
 };
 
 exports.getAllEngagements = async (req, res) => {
-    try {
-        const data = await Engagement.find()
-            .populate('user', 'name email engagementScore')
-            .populate('activity', 'name category');
+  try {
 
-        res.json(data);
+    await autoMarkAbsent();
 
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
+    const data = await Engagement.find()
+      .populate('user', 'name email department engagementScore')
+      .populate('activity');
+
+    res.json(data);
+
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 };
 
 exports.getMyEngagements = async (req, res) => {
@@ -103,4 +106,20 @@ exports.getMyEngagements = async (req, res) => {
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
+};
+
+// AUTO ABSENT CHECK
+const autoMarkAbsent = async () => {
+  const today = new Date();
+
+  const pending = await Engagement.find({
+    attendanceStatus: "registered"
+  }).populate("activity");
+
+  for (let e of pending) {
+    if (e.activity?.date && new Date(e.activity.date) < today) {
+      e.attendanceStatus = "absent";
+      await e.save();
+    }
+  }
 };

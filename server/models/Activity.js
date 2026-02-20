@@ -1,19 +1,22 @@
 const mongoose = require('mongoose');
 
 const activitySchema = new mongoose.Schema({
-    name: { type: String, required: true },
-    category: { type: String, required: true },
-    description: String,
+  name: { type: String, required: true },
 
-    youtubeLink: {
-        type: String,
-        default: "https://www.youtube.com/embed/dQw4w9WgXcQ"
-    },
+  category: {
+    type: String,
+    enum: ['Quiz', 'Hackathon', 'Conference', 'Workshop', 'Course'],
+    required: true
+  },
 
-    duration: {
-        type: Number, // seconds
-        default: 600
-    }
+  description: String,
+
+  date: {
+    type: Date,
+    required: true
+  },
+
+  youtubeLink: String
 
 }, { timestamps: true });
 
