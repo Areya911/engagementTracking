@@ -18,6 +18,7 @@ import Settings from "./pages/admin/Settings";
 import UserLayout from "./pages/user/UserLayout";
 import UserDashboard from "./pages/user/UserDashboard";
 import UserActivities from "./pages/user/UserActivities";
+import WatchActivity from "./pages/user/WatchActivity";
 import UserProgress from "./pages/user/UserProgress";
 import UserProfile from "./pages/user/UserProfile";
 
@@ -44,6 +45,7 @@ function App() {
             <Route path="/user" element={<UserLayout />}>
             <Route path="dashboard" element={<UserDashboard />} />
             <Route path="activities" element={<UserActivities />} />
+            <Route path="watch/:id" element={<WatchActivity />} /> link
             <Route path="progress" element={<UserProgress />} />
             <Route path="profile" element={<UserProfile />} />
           </Route>

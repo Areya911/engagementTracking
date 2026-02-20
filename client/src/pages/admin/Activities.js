@@ -21,8 +21,10 @@ export default function Activities() {
   const [form, setForm] = useState({
     name: "",
     category: "",
-    description: ""
+    description: "",
+    youtubeLink: ""
   });
+
 
   useEffect(() => {
     fetchData();
@@ -57,7 +59,7 @@ export default function Activities() {
 
   const openAdd = () => {
     setEditing(null);
-    setForm({ name: "", category: "", description: "" });
+    setForm({ name: "", category: "", description: "", youtubeLink: "" });
     setShowModal(true);
   };
 
@@ -223,32 +225,33 @@ export default function Activities() {
 
       {/* MODAL */}
       {showModal && (
-        <div style={overlay}>
-          <div style={modal}>
-            <h3>{editing ? "Edit Activity" : "Add Activity"}</h3>
+      <div style={overlay}>
+        <div style={modal}>
+          <h3>{editing ? "Edit Activity" : "Add Activity"}</h3>
 
-            <input
-              placeholder="Name"
-              value={form.name}
-              onChange={e => setForm({ ...form, name: e.target.value })}
-            />
+          <input
+            placeholder="Name"
+            value={form.name}
+            onChange={e => setForm({ ...form, name: e.target.value })}
+          />
 
-            <input
-              placeholder="Category"
-              value={form.category}
-              onChange={e => setForm({ ...form, category: e.target.value })}
-            />
+          <input
+            placeholder="Category"
+            value={form.category}
+            onChange={e => setForm({ ...form, category: e.target.value })}
+          />
 
-            <textarea
-              placeholder="Description"
-              value={form.description}
-              onChange={e => setForm({ ...form, description: e.target.value })}
-            />
+          <textarea
+            placeholder="Description"
+            value={form.description}
+            onChange={e => setForm({ ...form, description: e.target.value })}
+          />
 
-            <button onClick={saveActivity}>Save</button>
-          </div>
+          <button onClick={saveActivity}>Save</button>
         </div>
-      )}
+      </div>
+    )}
+
     </div>
   );
 }

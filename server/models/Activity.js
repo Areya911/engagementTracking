@@ -1,17 +1,20 @@
 const mongoose = require('mongoose');
 
 const activitySchema = new mongoose.Schema({
-    name: {
+    name: { type: String, required: true },
+    category: { type: String, required: true },
+    description: String,
+
+    youtubeLink: {
         type: String,
-        required: true
+        default: "https://www.youtube.com/embed/dQw4w9WgXcQ"
     },
-    category: {
-        type: String,
-        required: true
-    },
-    description: {
-        type: String
+
+    duration: {
+        type: Number, // seconds
+        default: 600
     }
+
 }, { timestamps: true });
 
 module.exports = mongoose.model('Activity', activitySchema);

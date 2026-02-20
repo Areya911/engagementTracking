@@ -11,14 +11,23 @@ const engagementSchema = new mongoose.Schema({
         ref: 'Activity',
         required: true
     },
+
     attendanceStatus: {
         type: String,
-        enum: ['registered', 'attended', 'completed','absent'],
+        enum: ['registered', 'inprogress', 'completed'],
         default: 'registered'
     },
-    completionDate: {
-        type: Date
+
+    progress: {
+        type: Number,
+        default: 0
+    },
+
+    notes: {
+        type: String,
+        default: ""
     }
+
 }, { timestamps: true });
 
 module.exports = mongoose.model('Engagement', engagementSchema);

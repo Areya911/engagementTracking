@@ -28,53 +28,35 @@ export default function UserDashboard() {
   };
 
   const openVideo = (activity) => {
-    // TEMP default video (you can later store per activity in DB)
-    window.open("https://www.youtube.com/watch?v=dQw4w9WgXcQ", "_blank");
+    window.open(activity?.youtubeLink || "https://www.youtube.com", "_blank");
   };
 
   return (
-    <div style={{ padding: 30 }}>
+    <div style={container}>
       
       {/* HEADER */}
       <h1 style={{ marginBottom: 5 }}>
-        Welcome back, {userName || "User"}! 👋
+        Welcome back, {userName || "User"} 👋
       </h1>
       <p style={{ color: "#777" }}>
-        Here's your learning journey at a glance
+        Here's your enrolled learning activities
       </p>
 
-      {/* TOP STATS */}
-      <div style={{
-        display: "grid",
-        gridTemplateColumns: "repeat(4,1fr)",
-        gap: 20,
-        marginTop: 25
-      }}>
-        <StatCard title="Learning Time" value="--" subtitle="This Week" />
-        <StatCard title="Tasks Completed" value={activities.length} subtitle="Enrolled" />
-        <StatCard title="Overall Progress" value="0%" subtitle="Average" />
-        <StatCard title="Days Active" value="--" subtitle="Streak 🔥" />
-      </div>
-
-      {/* CURRENT ACTIVITIES */}
-      <h2 style={{ marginTop: 40 }}>Your Current Activities</h2>
+      {/* ENROLLED ACTIVITIES */}
+      <h2 style={{ marginTop: 30 }}>Enrolled Activities</h2>
 
       {activities.length === 0 ? (
         <p style={{ color: "#777", marginTop: 10 }}>
-          No activities enrolled yet. Go to Activities page and register.
+          No activities enrolled yet.
         </p>
       ) : (
-        <div style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
-          gap: 20,
-          marginTop: 15
-        }}>
+        <div style={grid}>
           {activities.map((e, i) => (
             <ActivityCard
               key={i}
               activity={e.activity}
               status={e.attendanceStatus}
+              progress={e.progress || 0}
               onOpen={() => openVideo(e.activity)}
             />
           ))}
@@ -84,66 +66,92 @@ export default function UserDashboard() {
   );
 }
 
-/* STAT CARD */
-function StatCard({ title, value, subtitle }) {
-  return (
-    <div style={card}>
-      <small style={{ color: "#777" }}>{subtitle}</small>
-      <h2>{value}</h2>
-      <p>{title}</p>
-    </div>
-  );
-}
-
 /* ACTIVITY CARD */
-function ActivityCard({ activity, status, onOpen }) {
-  const progress = status === "completed" ? 100 : 0;
+function ActivityCard({ activity, status, progress, onOpen }) {
+  const isCourse = activity?.category?.toLowerCase() === "course";
 
   return (
     <div style={card}>
-      <small style={{ color: "#6366f1" }}>{activity?.category}</small>
-      <h3>{activity?.name}</h3>
-      <p style={{ color: "#777" }}>{activity?.description}</p>
+      <small style={categoryTag}>{activity?.category}</small>
 
-      <div style={progressBg}>
-        <div style={{
-          ...progressFill,
-          width: `${progress}%`
-        }} />
-      </div>
+      <h3 style={{ margin: "6px 0" }}>{activity?.name}</h3>
 
-      <small>{progress}%</small>
+      <p style={{ color: "#777", fontSize: 14 }}>
+        {activity?.description}
+      </p>
+
+      {/* SHOW PROGRESS ONLY FOR COURSES */}
+      {isCourse && (
+        <>
+          <div style={progressBg}>
+            <div
+              style={{
+                ...progressFill,
+                width: `${progress}%`
+              }}
+            />
+          </div>
+          <small style={{ color: "#666" }}>
+            {progress}% completed
+          </small>
+        </>
+      )}
 
       <button style={btn} onClick={onOpen}>
-        Start Learning
+        {isCourse ? "Continue Course" : "View Activity"}
       </button>
     </div>
   );
 }
 
 /* STYLES */
+
+const container = {
+  padding: 30,
+  background: "#f8fafc",
+  minHeight: "100vh"
+};
+
+const grid = {
+  display: "grid",
+  gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
+  gap: 20,
+  marginTop: 15
+};
+
 const card = {
   background: "white",
-  padding: 20,
-  borderRadius: 12,
-  boxShadow: "0 2px 8px rgba(0,0,0,0.05)"
+  padding: 22,
+  borderRadius: 14,
+  boxShadow: "0 4px 12px rgba(0,0,0,0.06)",
+  display: "flex",
+  flexDirection: "column",
+  gap: 10,
+  transition: "0.2s"
+};
+
+const categoryTag = {
+  color: "#6366f1",
+  fontWeight: 600,
+  fontSize: 12
 };
 
 const btn = {
-  marginTop: 12,
+  marginTop: 10,
   background: "#6366f1",
   color: "white",
   border: "none",
-  padding: "10px 16px",
+  padding: "10px 14px",
   borderRadius: 8,
-  cursor: "pointer"
+  cursor: "pointer",
+  fontSize: 14
 };
 
 const progressBg = {
-  height: 10,
-  background: "#eee",
+  height: 8,
+  background: "#e5e7eb",
   borderRadius: 10,
-  marginTop: 10,
+  marginTop: 8,
   overflow: "hidden"
 };
 

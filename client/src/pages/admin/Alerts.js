@@ -209,7 +209,7 @@ function UserPanel({ title, users }) {
             padding: 10,
             borderBottom: "1px solid #eee"
           }}>
-            <b>{u.name}</b> — {u.email}
+            <b>a{u.name}</b> — {u.email}
           </div>
         ))
       )}
