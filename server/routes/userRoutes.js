@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 
-const { getAllUsers, updateProfile } = require('../controllers/userController');
+const { getAllUsers, updateProfile , getStudentReport} = require('../controllers/userController');
 const { protect } = require('../middleware/authMiddleware');
 const { isAdmin } = require('../middleware/adminMiddleware');
 const User = require("../models/User");
@@ -19,4 +19,5 @@ router.get('/:id', protect, async (req, res) => {
 // Update profile
 router.put('/profile', protect, updateProfile);
 
+router.get("/report/:id", protect, isAdmin, getStudentReport);
 module.exports = router;
