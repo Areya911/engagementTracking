@@ -18,7 +18,7 @@ exports.getAllUsers = async (req, res) => {
 =========================== */
 exports.updateProfile = async (req, res) => {
   try {
-    const userId = req.user.id;
+    const userId = req.user._id;
 
     const { name, department, phone } = req.body;
 
@@ -26,9 +26,10 @@ exports.updateProfile = async (req, res) => {
       userId,
       { name, department, phone },
       { new: true }
-    );
+    ).select("-password");
 
     res.json(updatedUser);
+
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -55,20 +56,20 @@ exports.getStudentReport = async (req, res) => {
       e => e.attendanceStatus === "present"
     ).length;
 
-    const completed = engagements.filter(
-      e => e.attendanceStatus === "completed"
+    const absent = engagements.filter(
+      e => e.attendanceStatus === "absent"
     ).length;
 
     const engagementScore =
       totalActivities === 0
         ? 0
-        : Math.round(((attended + completed) / totalActivities) * 100);
+        : Math.round((attended / totalActivities) * 100);
 
     res.json({
       user,
       totalActivities,
       attended,
-      completed,
+      absent,
       engagementScore,
       engagements
     });
