@@ -4,7 +4,8 @@ const router = express.Router();
 const {
   getAllUsers,
   updateProfile,
-  getStudentReport
+  getStudentReport,
+  getUserDashboard
 } = require('../controllers/userController');
 
 const { protect } = require('../middleware/authMiddleware');
@@ -16,6 +17,7 @@ const User = require("../models/User");
 =========================== */
 router.get("/", protect, isAdmin, getAllUsers);
 
+router.get("/dashboard", protect, getUserDashboard);
 /* ===========================
    STUDENT REPORT (MUST COME BEFORE :id)
 =========================== */

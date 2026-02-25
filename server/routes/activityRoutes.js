@@ -4,7 +4,9 @@ const {
     createActivity,
     getActivities,
     updateActivity,
-    deleteActivity
+    deleteActivity,
+    getActivitiesForStudent,
+    registerForActivity
 } = require('../controllers/activityController');
 
 const { protect } = require('../middleware/authMiddleware');
@@ -18,4 +20,6 @@ router.delete('/:id', protect, isAdmin, deleteActivity);
 // Logged-in users
 router.get('/', protect, getActivities);
 
+router.get("/student", protect, getActivitiesForStudent);
+router.post("/register", protect, registerForActivity);
 module.exports = router;

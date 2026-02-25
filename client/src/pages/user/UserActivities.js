@@ -1,205 +1,222 @@
 import { useEffect, useState } from "react";
 import API from "../../api/axios";
 
-export default function UserActivities() {
-  const [myActivities, setMyActivities] = useState([]);
-  const [allActivities, setAllActivities] = useState([]);
-  const [showModal, setShowModal] = useState(false);
+export default function MyActivities() {
+
+  const [activities, setActivities] = useState([]);
+  const [showRegisterPanel, setShowRegisterPanel] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    loadMyActivities();
+    loadActivities();
   }, []);
 
-  const loadMyActivities = async () => {
-    const res = await API.get("/engagements/my");
-    setMyActivities(res.data);
+  const loadActivities = async () => {
+    try {
+      const res = await API.get("/activities/student");
+      setActivities(res.data);
+    } catch (err) {
+      console.error("Failed to load activities", err);
+    }
   };
 
-  const openRegister = async () => {
-    const res = await API.get("/activities");
-    setAllActivities(res.data);
-    setShowModal(true);
+  const register = async (id) => {
+    try {
+      setLoading(true);
+
+      await API.post("/activities/register", {
+        activityId: id
+      });
+
+      await loadActivities(); // real-time refresh
+      setShowRegisterPanel(false);
+
+    } catch (err) {
+      console.error("Registration failed", err);
+      alert(err.response?.data?.message || "Registration failed");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const register = async (activityId) => {
-    await API.post(`/engagements/register/${activityId}`);
-    setShowModal(false);
-    loadMyActivities();
-  };
+  const unregisteredActivities = activities.filter(a => !a.status);
 
   return (
-    <div style={{ padding: 30, background: "#f8fafc", minHeight: "100vh" }}>
-      
-      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 20 }}>
+    <div style={{ padding: 30 }}>
+
+      {/* HEADER */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <h1>My Activities</h1>
 
-        <button onClick={openRegister} style={registerBtn}>
-          + Register Activity
+        <button
+          style={registerBtn}
+          onClick={() => setShowRegisterPanel(!showRegisterPanel)}
+        >
+          + Register for Activity
         </button>
       </div>
 
-      <div style={card}>
-        <table style={{ width: "100%", borderCollapse: "collapse" }}>
-          <thead>
-            <tr style={headerRow}>
-              <th style={th}>Activity</th>
-              <th style={th}>Category</th>
-              <th style={th}>Status</th>
-            </tr>
-          </thead>
+      {/* REGISTER PANEL */}
+      {showRegisterPanel && (
+        <div style={registerPanel}>
+          <h3>Available Activities</h3>
 
-          <tbody>
-            {myActivities.map((e) => (
-              <tr key={e._id} style={row}>
-                <td style={td}>
-                  <b>{e.activity?.name}</b>
-                </td>
+          {unregisteredActivities.length === 0 && (
+            <p style={{ color: "#777" }}>No available activities</p>
+          )}
 
-                <td style={td}>{e.activity?.category}</td>
-
-                <td style={td}>
-                  <span style={statusBadge(e.attendanceStatus)}>
-                    {e.attendanceStatus}
-                  </span>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-
-        {myActivities.length === 0 && (
-          <p style={{ color: "#64748b", marginTop: 20 }}>
-            No activities registered yet.
-          </p>
-        )}
-      </div>
-
-      {/* REGISTER MODAL */}
-      {showModal && (
-        <div style={overlay}>
-          <div style={modal}>
-            <h3>Register for Activity</h3>
-
-            {allActivities.map(a => (
-              <div key={a._id} style={activityCard}>
-                <div>
-                  <b>{a.name}</b>
-                  <p style={{ fontSize: 12, color: "#64748b" }}>{a.category}</p>
-                </div>
-
-                <button
-                  onClick={() => register(a._id)}
-                  style={smallBtn}
-                >
-                  Register
-                </button>
-              </div>
-            ))}
-
-            <button onClick={() => setShowModal(false)} style={cancelBtn}>
-              Close
-            </button>
-          </div>
+          {unregisteredActivities.map(a => (
+            <div key={a._id} style={registerRow}>
+              <span>{a.name}</span>
+              <button
+                style={smallRegisterBtn}
+                disabled={loading}
+                onClick={() => register(a._id)}
+              >
+                Register
+              </button>
+            </div>
+          ))}
         </div>
       )}
+
+      {/* TABLE */}
+      <div style={tableContainer}>
+
+        {/* TABLE HEADER */}
+        <div style={{ ...row, fontWeight: "600", color: "#666" }}>
+          <div>ACTIVITY</div>
+          <div>TYPE</div>
+          <div>DATE</div>
+          <div>STATUS</div>
+        </div>
+
+        {/* TABLE ROWS */}
+        {activities.map(a => (
+          <div key={a._id} style={row}>
+
+            <div>{a.name}</div>
+
+            <div>
+              <TypeBadge type={a.category} />
+            </div>
+
+            <div>
+              {new Date(a.date).toLocaleDateString()}
+            </div>
+
+            <div>
+              {a.status === "present" && (
+                <Status text="Attended" color="#10b981" />
+              )}
+
+              {a.status === "registered" && (
+                <Status text="Registered" color="#5a4de1" />
+              )}
+
+              {a.status === "absent" && (
+                <Status text="Missed" color="#ef4444" />
+              )}
+
+              {!a.status && (
+                <span style={{ color: "#999" }}>Not Registered</span>
+              )}
+            </div>
+
+          </div>
+        ))}
+
+      </div>
+
     </div>
   );
 }
 
-/* STYLES */
+/* ================= UI COMPONENTS ================= */
 
-const card = {
+function Status({ text, color }) {
+  return (
+    <span style={{
+      background: color + "20",
+      color,
+      padding: "5px 12px",
+      borderRadius: 20,
+      fontSize: 13
+    }}>
+      {text}
+    </span>
+  );
+}
+
+function TypeBadge({ type }) {
+
+  const colors = {
+    Quiz: "#60a5fa",
+    Hackathon: "#f59e0b",
+    Conference: "#10b981",
+    Workshop: "#8b5cf6"
+  };
+
+  return (
+    <span style={{
+      padding: "6px 14px",
+      borderRadius: 20,
+      background: (colors[type] || "#999") + "20",
+      color: colors[type] || "#333",
+      fontSize: 13
+    }}>
+      {type}
+    </span>
+  );
+}
+
+/* ================= STYLES ================= */
+
+const tableContainer = {
   background: "white",
-  borderRadius: 12,
+  borderRadius: 20,
   padding: 20,
-  boxShadow: "0 4px 12px rgba(0,0,0,0.05)"
-};
-
-const registerBtn = {
-  background: "#6366f1",
-  color: "white",
-  border: "none",
-  padding: "10px 16px",
-  borderRadius: 8,
-  cursor: "pointer"
-};
-
-const headerRow = {
-  textAlign: "left",
-  borderBottom: "1px solid #eee"
-};
-
-const th = {
-  padding: "12px 0",
-  fontSize: 12,
-  color: "#64748b"
+  marginTop: 20
 };
 
 const row = {
-  borderBottom: "1px solid #f1f5f9"
-};
-
-const td = {
-  padding: "16px 0"
-};
-
-const statusBadge = (status) => ({
-  background:
-    status === "registered"
-      ? "#f59e0b"
-      : status === "attended"
-      ? "#10b981"
-      : "#ef4444",
-  color: "white",
-  padding: "4px 10px",
-  borderRadius: 20,
-  fontSize: 12
-});
-
-const overlay = {
-  position: "fixed",
-  inset: 0,
-  background: "rgba(0,0,0,0.3)",
-  display: "flex",
+  display: "grid",
+  gridTemplateColumns: "2fr 1fr 1fr 1fr",
   alignItems: "center",
-  justifyContent: "center"
+  padding: "16px 0",
+  borderBottom: "1px solid #eee"
 };
 
-const modal = {
+const registerPanel = {
   background: "white",
-  padding: 30,
-  borderRadius: 12,
-  width: 400,
-  maxHeight: 500,
-  overflowY: "auto",
-  display: "flex",
-  flexDirection: "column",
-  gap: 12
+  padding: 20,
+  borderRadius: 15,
+  marginTop: 20,
+  marginBottom: 20,
+  boxShadow: "0 5px 15px rgba(0,0,0,0.05)"
 };
 
-const activityCard = {
+const registerRow = {
   display: "flex",
   justifyContent: "space-between",
   alignItems: "center",
-  padding: 12,
-  border: "1px solid #eee",
-  borderRadius: 8
+  marginBottom: 10
 };
 
-const smallBtn = {
-  background: "#22c55e",
+const registerBtn = {
+  background: "#5a4de1",
   color: "white",
   border: "none",
-  padding: "6px 12px",
-  borderRadius: 6,
+  padding: "10px 18px",
+  borderRadius: 10,
   cursor: "pointer"
 };
 
-const cancelBtn = {
-  marginTop: 10,
-  background: "#ef4444",
+const smallRegisterBtn = {
+  background: "#5a4de1",
   color: "white",
   border: "none",
-  padding: "8px 12px",
-  borderRadius: 6
+  padding: "6px 14px",
+  borderRadius: 20,
+  cursor: "pointer"
 };
