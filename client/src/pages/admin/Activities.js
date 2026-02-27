@@ -11,7 +11,8 @@ export default function Activities() {
   const [newActivity, setNewActivity] = useState({
     name: "",
     category: "Quiz",
-    date: ""
+    date: "",
+    youtubeUrl: ""
   });
 
   useEffect(() => {
@@ -28,8 +29,15 @@ export default function Activities() {
 
   const createActivity = async () => {
     await API.post("/activities", newActivity);
+
     setShowAdd(false);
-    setNewActivity({ name: "", category: "Quiz", date: "" });
+    setNewActivity({
+      name: "",
+      category: "Quiz",
+      date: "",
+      youtubeUrl: ""
+    });
+
     load();
   };
 
@@ -116,7 +124,7 @@ export default function Activities() {
             <input
               placeholder="Event Name"
               value={newActivity.name}
-              onChange={e =>
+              onChange={(e) =>
                 setNewActivity({ ...newActivity, name: e.target.value })
               }
               style={input}
@@ -124,8 +132,11 @@ export default function Activities() {
 
             <select
               value={newActivity.category}
-              onChange={e =>
-                setNewActivity({ ...newActivity, category: e.target.value })
+              onChange={(e) =>
+                setNewActivity({
+                  ...newActivity,
+                  category: e.target.value
+                })
               }
               style={input}
             >
@@ -136,10 +147,26 @@ export default function Activities() {
               <option>Course</option>
             </select>
 
+            {/* Show YouTube input only for Course */}
+            {newActivity.category === "Course" && (
+              <input
+                type="text"
+                placeholder="YouTube URL"
+                value={newActivity.youtubeUrl}
+                onChange={(e) =>
+                  setNewActivity({
+                    ...newActivity,
+                    youtubeUrl: e.target.value
+                  })
+                }
+                style={input}
+              />
+            )}
+
             <input
               type="date"
               value={newActivity.date}
-              onChange={e =>
+              onChange={(e) =>
                 setNewActivity({ ...newActivity, date: e.target.value })
               }
               style={input}
@@ -152,6 +179,7 @@ export default function Activities() {
             <button onClick={() => setShowAdd(false)}>
               Cancel
             </button>
+
           </div>
         </div>
       )}

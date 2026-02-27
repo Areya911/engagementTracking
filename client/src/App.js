@@ -18,9 +18,10 @@ import Settings from "./pages/admin/Settings";
 import UserLayout from "./pages/user/UserLayout";
 import UserDashboard from "./pages/user/UserDashboard";
 import UserActivities from "./pages/user/UserActivities";
-import WatchActivity from "./pages/user/WatchActivity";
 import UserProgress from "./pages/user/UserProgress";
 import UserProfile from "./pages/user/UserProfile";
+import CoursePlayer from "./pages/user/CoursePlayer";
+import MyCourses from "./pages/user/MyCourses";
 
 function App() {
   return (
@@ -45,7 +46,8 @@ function App() {
             <Route path="/user" element={<UserLayout />}>
             <Route path="dashboard" element={<UserDashboard />} />
             <Route path="activities" element={<UserActivities />} />
-            <Route path="watch/:id" element={<WatchActivity />} /> link
+            <Route path="courses" element={<MyCourses />} />
+            <Route path="course/:engagementId" element={<CoursePlayer />} />
             <Route path="progress" element={<UserProgress />} />
             <Route path="profile" element={<UserProfile />} />
           </Route>
