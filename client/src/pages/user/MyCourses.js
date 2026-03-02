@@ -1,9 +1,8 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import API from "../../api/axios";
+import { useNavigate } from "react-router-dom";
 
 export default function MyCourses() {
-
   const [courses, setCourses] = useState([]);
   const navigate = useNavigate();
 
@@ -12,58 +11,43 @@ export default function MyCourses() {
   }, []);
 
   const loadCourses = async () => {
-    const res = await API.get("/users/courses/student");
-    setCourses(res.data);
+    try {
+      const res = await API.get("/users/courses/student"); // ✅ CORRECT
+      setCourses(res.data);
+    } catch (err) {
+      console.error("Failed to load courses");
+    }
   };
 
   return (
     <div style={{ padding: 30 }}>
-
       <h1>My Courses</h1>
 
+      {courses.length === 0 && <p>No courses enrolled yet.</p>}
+
       <div style={grid}>
+        {courses.map(c => (
+          <div key={c._id} style={card}>
+            <h3>{c.activity.name}</h3>
 
-        {courses.map(course => (
-          <div key={course._id} style={card}>
-
-            <div style={thumbnail}>
-              ▶
-            </div>
-
-            <h3>{course.activity.name}</h3>
-
-            <p>Progress: {course.progress || 0}%</p>
-
-            <div style={progressBg}>
-              <div
-                style={{
-                  ...progressFill,
-                  width: `${course.progress || 0}%`
-                }}
-              />
-            </div>
+            <p>Progress: {c.progress || 0}%</p>
 
             <button
               style={btn}
-              onClick={() =>
-                navigate(`/student/course/${course._id}`)
-              }
+              onClick={() => navigate(`/user/course/${c._id}`)}
             >
-              Start Watching
+              Start Course
             </button>
-
           </div>
         ))}
-
       </div>
-
     </div>
   );
 }
 
 const grid = {
   display: "grid",
-  gridTemplateColumns: "repeat(2, 1fr)",
+  gridTemplateColumns: "repeat(auto-fit, minmax(240px,1fr))",
   gap: 20,
   marginTop: 20
 };
@@ -71,38 +55,15 @@ const grid = {
 const card = {
   background: "white",
   padding: 20,
-  borderRadius: 20
-};
-
-const thumbnail = {
-  height: 150,
-  background: "#ddd",
-  borderRadius: 12,
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  fontSize: 30
-};
-
-const progressBg = {
-  height: 6,
-  background: "#eee",
-  borderRadius: 10,
-  marginTop: 10
-};
-
-const progressFill = {
-  height: "100%",
-  background: "#5a4de1",
-  borderRadius: 10
+  borderRadius: 16
 };
 
 const btn = {
-  marginTop: 15,
+  marginTop: 10,
   background: "#5a4de1",
   color: "white",
   border: "none",
-  padding: "8px 15px",
+  padding: "8px 14px",
   borderRadius: 10,
   cursor: "pointer"
 };

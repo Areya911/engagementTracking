@@ -25,9 +25,18 @@ const engagementSchema = new mongoose.Schema({
     default: 0
   },
 
-  notes: {
-    type: String,
-    default: ""
+  // ✅ multiple notes during course
+  notes: [
+    {
+      text: String,
+      createdAt: { type: Date, default: Date.now }
+    }
+  ],
+
+  // ✅ seconds watched
+  watchTime: {
+    type: Number,
+    default: 0
   }
 
 }, { timestamps: true });

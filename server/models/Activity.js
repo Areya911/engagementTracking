@@ -16,7 +16,11 @@ const activitySchema = new mongoose.Schema({
     required: true
   },
 
-  youtubeLink: String
+  //  used only when category === "Course"
+  youtubeUrl: {
+    type: String,
+    default: ""
+  }
 
 }, { timestamps: true });
 

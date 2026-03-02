@@ -3,23 +3,30 @@ const Engagement = require('../models/Engagement');
 /* =============================
    CREATE ACTIVITY
 ============================= */
+
 exports.createActivity = async (req, res) => {
   try {
-    const { name, category, date } = req.body;
+    const { name, category, date, youtubeUrl } = req.body;
+
+    const isCourse = category === "Course";
+
+    if (isCourse && !youtubeUrl) {
+      return res.status(400).json({ message: "YouTube URL required for course" });
+    }
 
     const activity = await Activity.create({
       name,
       category,
-      date
+      date,
+      youtubeUrl: isCourse ? youtubeUrl : "",
+      isCourse
     });
 
     res.status(201).json(activity);
-
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 };
-
 /* =============================
    GET ALL ACTIVITIES
 ============================= */

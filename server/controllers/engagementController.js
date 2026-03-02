@@ -1,125 +1,128 @@
 const Engagement = require('../models/Engagement');
-const Activity = require('../models/Activity');
 const { recalculateUserScore } = require("../utils/scoreEngine");
 
-// REGISTER (with duplicate prevention)
+/* =========================
+   REGISTER FOR ACTIVITY
+========================= */
 exports.registerForActivity = async (req, res) => {
-    try {
-        const existing = await Engagement.findOne({
-            user: req.user._id,
-            activity: req.params.activityId
-        });
-
-        if (existing) {
-            return res.status(400).json({ message: "Already registered" });
-        }
-
-        const engagement = await Engagement.create({
-            user: req.user._id,
-            activity: req.params.activityId,
-            attendanceStatus: "registered"
-        });
-
-        await recalculateUserScore(req.user._id);
-
-        res.status(201).json(engagement);
-
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
-};
-
-// ADMIN updates status
-exports.updateEngagementStatus = async (req, res) => {
-    try {
-        const { status } = req.body;
-
-        const updated = await Engagement.findByIdAndUpdate(
-            req.params.id,
-            { attendanceStatus: status },
-            { new: true }
-        );
-
-        await recalculateUserScore(updated.user);
-
-        res.json(updated);
-
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
-};
-
-// USER progress update (video watching)
-exports.updateProgress = async (req, res) => {
-    try {
-        const { progress, notes } = req.body;
-
-        const engagement = await Engagement.findById(req.params.id);
-
-        if (!engagement) {
-            return res.status(404).json({ message: "Not found" });
-        }
-
-        engagement.progress = progress;
-        engagement.notes = notes;
-
-        if (progress >= 100) {
-            engagement.attendanceStatus = "completed";
-        } else if (progress > 0) {
-            engagement.attendanceStatus = "inprogress";
-        }
-
-        await engagement.save();
-
-        await recalculateUserScore(engagement.user);
-
-        res.json(engagement);
-
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
-};
-
-exports.getAllEngagements = async (req, res) => {
   try {
+    const existing = await Engagement.findOne({
+      user: req.user._id,
+      activity: req.params.activityId
+    });
 
-    await autoMarkAbsent();
+    if (existing) {
+      return res.status(400).json({ message: "Already registered" });
+    }
 
-    const data = await Engagement.find()
-      .populate('user', 'name email department engagementScore')
-      .populate('activity');
+    const engagement = await Engagement.create({
+      user: req.user._id,
+      activity: req.params.activityId
+    });
 
-    res.json(data);
+    await recalculateUserScore(req.user._id);
+    res.status(201).json(engagement);
 
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
   }
 };
 
-exports.getMyEngagements = async (req, res) => {
-    try {
-        const data = await Engagement.find({ user: req.user._id })
-            .populate('activity');
+/* =========================
+   COURSE WATCH + NOTES
+========================= */
+exports.updateCourseProgress = async (req, res) => {
+  try {
+    const { watchSeconds = 0, noteText } = req.body;
 
-        res.json(data);
+    const engagement = await Engagement.findById(req.params.id)
+      .populate("activity");
 
-    } catch (error) {
-        res.status(500).json({ message: error.message });
+    if (!engagement) {
+      return res.status(404).json({ message: "Engagement not found" });
     }
+
+    engagement.watchTime = (engagement.watchTime || 0) + watchSeconds;
+
+    const gained = Math.floor(engagement.watchTime / 300) * 2;
+    engagement.progress = Math.min(gained, 100);
+
+    if (noteText) {
+      engagement.notes.push({ text: noteText });
+    }
+
+    await engagement.save();
+    await recalculateUserScore(engagement.user);
+
+    res.json(engagement);
+
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
 };
 
-// AUTO ABSENT CHECK
-const autoMarkAbsent = async () => {
-  const today = new Date();
+/* =========================
+   GET ALL ENGAGEMENTS (ADMIN)
+========================= */
+exports.getAllEngagements = async (req, res) => {
+  try {
+    const data = await Engagement.find()
+      .populate('user', 'name email role')
+      .populate('activity');
 
-  const pending = await Engagement.find({
-    attendanceStatus: "registered"
-  }).populate("activity");
+    res.json(data);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
 
-  for (let e of pending) {
-    if (e.activity?.date && new Date(e.activity.date) < today) {
-      e.attendanceStatus = "absent";
-      await e.save();
+/* =========================
+   GET MY ENGAGEMENTS
+========================= */
+exports.getMyEngagements = async (req, res) => {
+  try {
+    const data = await Engagement.find({ user: req.user._id })
+      .populate('activity');
+
+    res.json(data);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+/* =========================
+   GET SINGLE ENGAGEMENT
+========================= */
+exports.getSingleEngagement = async (req, res) => {
+  try {
+    const engagement = await Engagement.findById(req.params.id)
+      .populate("activity");
+
+    if (!engagement) {
+      return res.status(404).json({ message: "Not found" });
     }
+
+    res.json(engagement);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+/* =========================
+   UPDATE STATUS (ADMIN)
+========================= */
+exports.updateEngagementStatus = async (req, res) => {
+  try {
+    const updated = await Engagement.findByIdAndUpdate(
+      req.params.id,
+      { attendanceStatus: req.body.status },
+      { new: true }
+    );
+
+    await recalculateUserScore(updated.user);
+    res.json(updated);
+
+  } catch (err) {
+    res.status(500).json({ message: err.message });
   }
 };

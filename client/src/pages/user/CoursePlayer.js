@@ -1,148 +1,128 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import API from "../../api/axios";
 
 export default function CoursePlayer() {
   const { engagementId } = useParams();
+  const videoRef = useRef(null);
 
   const [engagement, setEngagement] = useState(null);
-  const [notes, setNotes] = useState("");
-  const [savedNotes, setSavedNotes] = useState([]);
-  const [progress, setProgress] = useState(0);
+  const [note, setNote] = useState("");
+  const [lastTime, setLastTime] = useState(0);
 
-  // Load engagement + activity
+  // Load engagement
   useEffect(() => {
-    loadEngagement();
-  }, []);
-
-  const loadEngagement = async () => {
-    try {
-      const res = await API.get(`/engagements/${engagementId}`);
-      setEngagement(res.data);
-      setSavedNotes(res.data.notes || []);
-      setProgress(res.data.progress || 0);
-    } catch (err) {
-      console.error("Failed to load course", err);
-    }
-  };
-
-  // Track session time (simple & reliable)
-  useEffect(() => {
-    const startTime = Date.now();
-
-    return async () => {
+    const load = async () => {
       try {
-        const secondsWatched = Math.floor(
-          (Date.now() - startTime) / 1000
-        );
-
-        const newProgress = Math.min(
-          progress + Math.floor(secondsWatched / 5),
-          100
-        );
-
-        await API.put(`/engagements/progress/${engagementId}`, {
-          progress: newProgress,
-          notes: savedNotes
-        });
-      } catch (err) {
-        console.error("Progress save failed", err);
+        const res = await API.get(`/engagements/${engagementId}`);
+        setEngagement(res.data);
+      } catch {
+        console.error("Failed to load course");
       }
     };
-  }, [progress, savedNotes, engagementId]);
+    load();
+  }, [engagementId]);
+
+  // Track real watch time
+  const handleTimeUpdate = async () => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const current = Math.floor(video.currentTime);
+
+    // every 5 minutes
+    if (current - lastTime >= 300) {
+      try {
+        const res = await API.put(`/engagements/course/${engagementId}`, {
+          watchSeconds: 300
+        });
+        setEngagement(res.data);
+        setLastTime(current);
+      } catch {
+        console.error("Progress update failed");
+      }
+    }
+  };
 
   // Save note
   const saveNote = async () => {
-    if (!notes.trim()) return;
-
-    const updatedNotes = [
-      ...savedNotes,
-      { text: notes, createdAt: new Date() }
-    ];
+    if (!note.trim()) return;
 
     try {
-      await API.put(`/engagements/progress/${engagementId}`, {
-        progress,
-        notes: updatedNotes
+      const res = await API.put(`/engagements/course/${engagementId}`, {
+        watchSeconds: 0,
+        noteText: note
       });
-
-      setSavedNotes(updatedNotes);
-      setNotes("");
-    } catch (err) {
-      console.error("Note save failed", err);
+      setEngagement(res.data);
+      setNote("");
+    } catch {
+      console.error("Note save failed");
     }
   };
 
-  if (!engagement) {
-    return <div style={{ padding: 30 }}>Loading course...</div>;
-  }
+  if (!engagement) return <p style={{ padding: 30 }}>Loading...</p>;
 
   const videoSrc = engagement.activity.youtubeUrl
     ?.replace("watch?v=", "embed/");
 
   return (
     <div style={container}>
-      {/* VIDEO SECTION */}
+      {/* VIDEO */}
       <div style={videoSection}>
         <h2>{engagement.activity.name}</h2>
 
         <iframe
+          ref={videoRef}
+          src={videoSrc}
           width="100%"
           height="400"
-          src={videoSrc}
-          title="Course Video"
-          frameBorder="0"
+          onTimeUpdate={handleTimeUpdate}
           allowFullScreen
           style={{ borderRadius: 12 }}
         />
 
-        {/* PROGRESS */}
         <div style={{ marginTop: 15 }}>
           <div style={progressBg}>
             <div
               style={{
                 ...progressFill,
-                width: `${progress}%`
+                width: `${engagement.progress}%`
               }}
             />
           </div>
-          <div style={{ textAlign: "right", marginTop: 5 }}>
-            {progress}%
-          </div>
+          <p style={{ textAlign: "right" }}>
+            {engagement.progress}%
+          </p>
         </div>
       </div>
 
-      {/* NOTES SECTION */}
+      {/* NOTES */}
       <div style={notesSection}>
         <h3>Notes</h3>
 
         <textarea
+          value={note}
+          onChange={e => setNote(e.target.value)}
           placeholder="Write notes while watching..."
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
           style={textarea}
         />
 
-        <button style={saveBtn} onClick={saveNote}>
+        <button onClick={saveNote} style={saveBtn}>
           Save Note
         </button>
 
-        <div style={{ marginTop: 20 }}>
-          {savedNotes.map((note, index) => (
-            <div key={index} style={noteCard}>
-              <small>
-                {new Date(note.createdAt).toLocaleString()}
-              </small>
-              <p>{note.text}</p>
-            </div>
-          ))}
-        </div>
+        {engagement.notes.map((n, i) => (
+          <div key={i} style={noteCard}>
+            <small>{new Date(n.createdAt).toLocaleString()}</small>
+            <p>{n.text}</p>
+          </div>
+        ))}
       </div>
     </div>
   );
 }
 
-/* ================= STYLES ================= */
+/* STYLES */
 
 const container = {
   display: "grid",
@@ -178,10 +158,9 @@ const progressFill = {
 const textarea = {
   width: "100%",
   height: 110,
-  borderRadius: 10,
   padding: 10,
-  border: "1px solid #ddd",
-  resize: "none"
+  borderRadius: 10,
+  border: "1px solid #ddd"
 };
 
 const saveBtn = {
@@ -198,5 +177,5 @@ const noteCard = {
   background: "#f9fafb",
   padding: 10,
   borderRadius: 10,
-  marginBottom: 10
+  marginTop: 10
 };

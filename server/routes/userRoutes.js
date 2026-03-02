@@ -5,7 +5,8 @@ const {
   getAllUsers,
   updateProfile,
   getStudentReport,
-  getUserDashboard
+  getUserDashboard,
+  getStudentCourses // ✅ ADD THIS
 } = require('../controllers/userController');
 
 const { protect } = require('../middleware/authMiddleware');
@@ -17,16 +18,25 @@ const User = require("../models/User");
 =========================== */
 router.get("/", protect, isAdmin, getAllUsers);
 
-router.get("/dashboard", protect, getUserDashboard);
 /* ===========================
-   STUDENT REPORT (MUST COME BEFORE :id)
+   USER DASHBOARD
 =========================== */
-router.get("/report/:id", protect, isAdmin, getStudentReport);
+router.get("/dashboard", protect, getUserDashboard);
+
+/* ===========================
+   STUDENT COURSES
+=========================== */
+router.get("/courses/student", protect, getStudentCourses);
 
 /* ===========================
    UPDATE PROFILE
 =========================== */
 router.put("/profile", protect, updateProfile);
+
+/* ===========================
+   STUDENT REPORT (ADMIN)
+=========================== */
+router.get("/report/:id", protect, isAdmin, getStudentReport);
 
 /* ===========================
    GET SINGLE USER (KEEP LAST)
