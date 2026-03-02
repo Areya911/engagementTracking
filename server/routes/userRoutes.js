@@ -6,7 +6,9 @@ const {
   updateProfile,
   getStudentReport,
   getUserDashboard,
-  getStudentCourses // ✅ ADD THIS
+  getStudentCourses,
+  getProgressAnalytics,
+  getProfileData
 } = require('../controllers/userController');
 
 const { protect } = require('../middleware/authMiddleware');
@@ -33,6 +35,9 @@ router.get("/courses/student", protect, getStudentCourses);
 =========================== */
 router.put("/profile", protect, updateProfile);
 
+router.get("/progress/analytics", protect, getProgressAnalytics);
+
+router.get("/profile/data", protect, getProfileData);
 /* ===========================
    STUDENT REPORT (ADMIN)
 =========================== */

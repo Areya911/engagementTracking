@@ -1,125 +1,150 @@
-export default function UserProgress() {
-  const weeklyHours = 8.5;
+import { useEffect, useState } from "react";
+import API from "../../api/axios";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  Tooltip,
+  ResponsiveContainer,
+  CartesianGrid
+} from "recharts";
 
-  const courses = [
-    { name: "Data Structures", progress: 75 },
-    { name: "ML Basics", progress: 52 },
-    { name: "Advanced Python", progress: 0 },
-    { name: "Web Dev", progress: 100 }
-  ];
+export default function UserProgress() {
+
+  const [data, setData] = useState(null);
+
+  useEffect(() => {
+    load();
+  }, []);
+
+  const load = async () => {
+    const res = await API.get("/users/progress/analytics");
+    setData(res.data);
+  };
+
+  if (!data) return <p style={{ padding: 30 }}>Loading...</p>;
 
   return (
-    <div style={{ padding: 30, background: "#f8fafc", minHeight: "100vh" }}>
-      <h1 style={{ marginBottom: 20 }}>Your Progress</h1>
+    <div style={{ padding: 30 }}>
+
+      <h1 style={{ marginBottom: 25 }}>Progress</h1>
 
       {/* TOP SECTION */}
-      <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 20 }}>
-        
-        {/* LEARNING TIME */}
+      <div style={topGrid}>
+
+        {/* WEEKLY CHART */}
         <div style={card}>
-          <h3>Learning Time This Week</h3>
+          <h3>Weekly Study Time</h3>
 
-          <div style={chartBox}>
-            <div style={{ marginTop: 80, color: "#64748b" }}>
-              Mon &nbsp; Tue &nbsp; Wed &nbsp; Thu &nbsp; Fri &nbsp; Sat &nbsp; Sun
-            </div>
+          <ResponsiveContainer width="100%" height={200}>
+            <BarChart data={data.weekly}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="day" />
+              <Tooltip />
+              <Bar dataKey="hours" fill="#5a4de1" radius={[6,6,0,0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
 
-            <div style={{ marginTop: 20, fontWeight: 600 }}>
-              Total: {weeklyHours} hours
-            </div>
+        {/* ENGAGEMENT SCORE */}
+        <div style={cardCenter}>
+          <h3>Engagement Score</h3>
+
+          <div style={{
+            fontSize: 70,
+            fontWeight: 700,
+            color:
+              data.engagementScore >= 70
+                ? "#10b981"
+                : data.engagementScore >= 40
+                ? "#f59e0b"
+                : "#ef4444"
+          }}>
+            {data.engagementScore}
+          </div>
+
+          <p>out of 100</p>
+
+          <div style={{
+            marginTop: 10,
+            color:
+              data.riskLevel === "Healthy"
+                ? "#10b981"
+                : data.riskLevel === "Moderate"
+                ? "#f59e0b"
+                : "#ef4444"
+          }}>
+            ● {data.riskLevel}
           </div>
         </div>
 
-        {/* COURSE PROGRESS */}
-        <div style={card}>
-          <h3>Course Progress</h3>
+      </div>
 
-          {courses.map((c, i) => (
-            <div key={i} style={{ marginTop: 18 }}>
-              <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <span>{c.name}</span>
-                <b style={{ color: "#4f46e5" }}>{c.progress}%</b>
-              </div>
+      {/* COURSE PROGRESS */}
+      <div style={{ ...card, marginTop: 30 }}>
+        <h3>Course Progress</h3>
 
-              <div style={progressBg}>
-                <div
-                  style={{
-                    ...progressFill,
-                    width: `${c.progress}%`
-                  }}
-                />
-              </div>
+        {data.courses.map((c, i) => (
+          <div key={i} style={{ marginTop: 20 }}>
+            <div style={row}>
+              <span>{c.name}</span>
+              <span>{c.hours}h · {c.progress}%</span>
             </div>
-          ))}
-        </div>
+
+            <div style={progressBg}>
+              <div
+                style={{
+                  ...progressFill,
+                  width: `${c.progress}%`,
+                  background:
+                    c.progress >= 70
+                      ? "#10b981"
+                      : c.progress >= 40
+                      ? "#f59e0b"
+                      : "#ef4444"
+                }}
+              />
+            </div>
+          </div>
+        ))}
       </div>
 
-      {/* PERFORMANCE SUMMARY */}
-      <div style={{ marginTop: 25 }}>
-        <h3 style={{ marginBottom: 12 }}>Performance Summary</h3>
-
-        <div style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(4,1fr)",
-          gap: 20
-        }}>
-          <Summary title="Avg Quiz Score" value="88%" />
-          <Summary title="Assignments Done" value="12/15" />
-          <Summary title="Discussion Posts" value="34" />
-          <Summary title="Live Sessions" value="8/10" />
-        </div>
-      </div>
     </div>
   );
 }
 
-/* ---------- COMPONENTS ---------- */
+/* ================= STYLES ================= */
 
-function Summary({ title, value }) {
-  return (
-    <div style={summaryCard}>
-      <div style={{ color: "#64748b", fontSize: 13 }}>{title}</div>
-      <h2 style={{ marginTop: 8, color: "#4f46e5" }}>{value}</h2>
-    </div>
-  );
-}
-
-/* ---------- STYLES ---------- */
+const topGrid = {
+  display: "grid",
+  gridTemplateColumns: "2fr 1fr",
+  gap: 25
+};
 
 const card = {
   background: "white",
-  padding: 20,
-  borderRadius: 12,
-  boxShadow: "0 4px 12px rgba(0,0,0,0.05)"
+  padding: 25,
+  borderRadius: 20
 };
 
-const chartBox = {
-  height: 180,
-  marginTop: 15,
-  borderRadius: 10,
-  background: "#f1f5f9",
+const cardCenter = {
+  ...card,
+  textAlign: "center"
+};
+
+const row = {
   display: "flex",
-  flexDirection: "column",
-  alignItems: "center",
-  justifyContent: "center"
+  justifyContent: "space-between",
+  marginBottom: 6
 };
 
 const progressBg = {
   height: 8,
   background: "#e5e7eb",
-  borderRadius: 10,
-  marginTop: 6
+  borderRadius: 10
 };
 
 const progressFill = {
   height: "100%",
-  background: "#6366f1",
   borderRadius: 10
-};
-
-const summaryCard = {
-  background: "white",
-  padding: 20,
-  borderRadius: 12,
-  boxShadow: "0 4px 12px rgba(0,0,0,0.05)"
 };
