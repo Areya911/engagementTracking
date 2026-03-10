@@ -62,21 +62,33 @@ export default function CoursePlayer() {
 
   if (!engagement) return <p style={{ padding: 30 }}>Loading...</p>;
 
-  const videoSrc = engagement.activity.youtubeUrl
-    ?.replace("watch?v=", "embed/");
+  let videoSrc = "";
+
+  if (engagement?.activity?.youtubeUrl) {
+  const url = engagement.activity.youtubeUrl;
+
+  if (url.includes("watch?v=")) {
+    const videoId = url.split("watch?v=")[1].split("&")[0];
+    videoSrc = `https://www.youtube.com/embed/${videoId}`;
+  } 
+  else if (url.includes("youtu.be/")) {
+    const videoId = url.split("youtu.be/")[1];
+    videoSrc = `https://www.youtube.com/embed/${videoId}`;
+  }
+}
 
   return (
     <div style={container}>
       {/* VIDEO */}
       <div style={videoSection}>
         <h2>{engagement.activity.name}</h2>
-
+         
         <iframe
           ref={videoRef}
           src={videoSrc}
           width="100%"
           height="400"
-          onTimeUpdate={handleTimeUpdate}
+         
           allowFullScreen
           style={{ borderRadius: 12 }}
         />

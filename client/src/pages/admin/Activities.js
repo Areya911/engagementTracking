@@ -28,8 +28,11 @@ export default function Activities() {
   };
 
   const createActivity = async () => {
-    await API.post("/activities", newActivity);
-
+    if (newActivity._id) {
+      await API.put(`/activities/${newActivity._id}`, newActivity);
+    } else {
+      await API.post("/activities", newActivity);
+    }
     setShowAdd(false);
     setNewActivity({
       name: "",
@@ -40,6 +43,28 @@ export default function Activities() {
 
     load();
   };
+
+  const deleteActivity = async (id) => {
+  if (!window.confirm("Delete this activity?")) return;
+
+  try {
+    await API.delete(`/activities/${id}`);
+    load();
+  } catch (err) {
+    console.error("Delete failed", err);
+  }
+};
+
+const editActivity = (activity) => {
+  setNewActivity({
+    name: activity.name,
+    category: activity.category,
+    date: activity.date.split("T")[0],
+    youtubeUrl: activity.youtubeUrl || ""
+  });
+
+  setShowAdd(true);
+};
 
   const openAttendance = (activity) => {
     const participants = engagements.filter(
@@ -52,7 +77,12 @@ export default function Activities() {
   const markAttendance = async (id, status) => {
     await API.put(`/engagements/${id}`, { status });
     load();
-    openAttendance(selected);
+    openAttendance({
+      ...selected,
+      participants: engagements.filter(
+        e => e.activity?._id === selected._id
+      )
+    });
   };
 
   const getStatus = (date) => {
@@ -101,14 +131,30 @@ export default function Activities() {
                 <div>{new Date(a.date).toLocaleDateString()}</div>
                 <div>{count}</div>
                 <div>{getStatus(a.date)}</div>
-                <div>
-                  <button
-                    style={actionBtn}
-                    onClick={() => openAttendance(a)}
-                  >
-                    Mark Attendance
-                  </button>
-                </div>
+                <div style={{ display: "flex", gap: 8 }}>
+
+  <button
+    style={actionBtn}
+    onClick={() => openAttendance(a)}
+  >
+    Attendance
+  </button>
+
+  <button
+    style={editBtn}
+    onClick={() => editActivity(a)}
+  >
+    Edit
+  </button>
+
+  <button
+    style={deleteBtn}
+    onClick={() => deleteActivity(a._id)}
+  >
+    Delete
+  </button>
+
+</div>
               </div>
             );
           })}
@@ -259,4 +305,22 @@ const input = {
   padding: 10,
   borderRadius: 8,
   border: "1px solid #ddd"
+};
+
+const deleteBtn = {
+  background: "#ef4444",
+  color: "white",
+  border: "none",
+  padding: "6px 10px",
+  borderRadius: 6,
+  cursor: "pointer"
+};
+
+const editBtn = {
+  background: "#f59e0b",
+  color: "white",
+  border: "none",
+  padding: "6px 10px",
+  borderRadius: 6,
+  cursor: "pointer"
 };

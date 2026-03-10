@@ -67,20 +67,18 @@ exports.updateActivity = async (req, res) => {
 ============================= */
 exports.deleteActivity = async (req, res) => {
   try {
-    const activity = await Activity.findById(req.params.id);
+    const activity = await Activity.findByIdAndDelete(req.params.id);
 
-    if (!activity)
+    if (!activity) {
       return res.status(404).json({ message: "Activity not found" });
+    }
 
-    await activity.deleteOne();
-
-    res.json({ message: "Activity deleted" });
+    res.json({ message: "Activity deleted successfully" });
 
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 };
-
 exports.getActivitiesForStudent = async (req, res) => {
   try {
     const userId = req.user.id; // ✅ use id
