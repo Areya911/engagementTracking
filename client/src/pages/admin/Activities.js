@@ -229,7 +229,53 @@ const editActivity = (activity) => {
           </div>
         </div>
       )}
+     
+    {selected && (
+  <div style={overlay}>
+    <div style={modal}>
 
+      <h2>{selected.name} Attendance</h2>
+
+      {selected.participants.length === 0 && (
+        <p>No students registered yet.</p>
+      )}
+
+      {selected.participants.map((p) => (
+        <div key={p._id} style={attendanceRow}>
+
+          <div>
+            {p.user?.name || "Student"}
+          </div>
+
+          <div style={{ display: "flex", gap: 10 }}>
+            <button
+              style={presentBtn}
+              onClick={() => markAttendance(p._id, "present")}
+            >
+              Present
+            </button>
+
+            <button
+              style={absentBtn}
+              onClick={() => markAttendance(p._id, "absent")}
+            >
+              Absent
+            </button>
+          </div>
+
+        </div>
+      ))}
+
+      <button
+        style={{ marginTop: 15 }}
+        onClick={() => setSelected(null)}
+      >
+        Close
+      </button>
+
+    </div>
+  </div>
+   )}
     </div>
   );
 }
@@ -318,6 +364,32 @@ const deleteBtn = {
 
 const editBtn = {
   background: "#f59e0b",
+  color: "white",
+  border: "none",
+  padding: "6px 10px",
+  borderRadius: 6,
+  cursor: "pointer"
+};
+
+const attendanceRow = {
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+  padding: "10px 0",
+  borderBottom: "1px solid #eee"
+};
+
+const presentBtn = {
+  background: "#10b981",
+  color: "white",
+  border: "none",
+  padding: "6px 10px",
+  borderRadius: 6,
+  cursor: "pointer"
+};
+
+const absentBtn = {
+  background: "#ef4444",
   color: "white",
   border: "none",
   padding: "6px 10px",
