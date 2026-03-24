@@ -1,26 +1,36 @@
 const mongoose = require('mongoose');
 
 const activitySchema = new mongoose.Schema({
-  name: { type: String, required: true },
 
-  category: {
-    type: String,
-    enum: ['Quiz', 'Hackathon', 'Conference', 'Workshop', 'Course'],
-    required: true
-  },
+name: { type: String, required: true },
 
-  description: String,
+category: {
+type: String,
+enum: ['Quiz', 'Hackathon', 'Conference', 'Workshop', 'Course'],
+required: true
+},
 
-  date: {
-    type: Date,
-    required: true
-  },
+description: String,
 
-  //  used only when category === "Course"
-  youtubeUrl: {
-    type: String,
-    default: ""
-  }
+date: {
+type: Date,
+required: function () {
+return this.category !== "Course";
+}
+},
+
+startDate: {
+type: Date
+},
+
+endDate: {
+type: Date
+},
+
+youtubeUrl: {
+type: String,
+default: ""
+}
 
 }, { timestamps: true });
 

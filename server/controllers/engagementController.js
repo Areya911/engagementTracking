@@ -33,7 +33,7 @@ exports.registerForActivity = async (req, res) => {
 ========================= */
 exports.updateCourseProgress = async (req, res) => {
   try {
-    const { watchSeconds = 0, noteText } = req.body;
+    const { watchSeconds = 0, totalVideoSeconds = 120, noteText } = req.body;
 
     const engagement = await Engagement.findById(req.params.id)
       .populate("activity");
@@ -42,10 +42,14 @@ exports.updateCourseProgress = async (req, res) => {
       return res.status(404).json({ message: "Engagement not found" });
     }
 
-    engagement.watchTime = (engagement.watchTime || 0) + watchSeconds;
+    if (engagement.activity.endDate && new Date(engagement.activity.endDate) < new Date()) {
+       return res.status(403).json({ message: "Course duration expired" });
+    }
 
-    const gained = Math.floor(engagement.watchTime / 300) * 2;
-    engagement.progress = Math.min(gained, 100);
+    engagement.watchTime = Math.min((engagement.watchTime || 0) + Number(watchSeconds), Number(totalVideoSeconds));
+
+    const progressPct = (engagement.watchTime / Number(totalVideoSeconds)) * 100;
+    engagement.progress = Math.min(Math.round(progressPct) || 0, 100);
 
     if (noteText) {
       engagement.notes.push({ text: noteText });

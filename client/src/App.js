@@ -3,56 +3,56 @@ import { AuthProvider } from "./context/AuthContext";
 
 import Login from "./pages/Login";
 
-// Admin Pages
-import AdminLayout from "./pages/admin/AdminLayout";
-import Dashboard from "./pages/admin/Dashboard";
-import Users from "./pages/admin/Users";
+// Admin
+import AdminLayout    from "./pages/admin/AdminLayout";
+import Dashboard      from "./pages/admin/Dashboard";
+import Users          from "./pages/admin/Users";
 import AdminUserProfile from "./pages/admin/AdminUserProfile";
-import Activities from "./pages/admin/Activities";
-import Analytics from "./pages/admin/Analytics";
-import Reports from "./pages/admin/Reports";
-import Alerts from "./pages/admin/Alerts";
-import Settings from "./pages/admin/Settings";
+import Activities     from "./pages/admin/Activities";
+import Analytics      from "./pages/admin/Analytics";
+import Reports        from "./pages/admin/Reports";
+import Alerts         from "./pages/admin/Alerts";
+import Settings       from "./pages/admin/Settings";
 
-// User Pages
-import UserLayout from "./pages/user/UserLayout";
-import UserDashboard from "./pages/user/UserDashboard";
+// Student
+import UserLayout     from "./pages/user/UserLayout";
+import UserDashboard  from "./pages/user/UserDashboard";
 import UserActivities from "./pages/user/UserActivities";
-import UserProgress from "./pages/user/UserProgress";
-import UserProfile from "./pages/user/UserProfile";
-import CoursePlayer from "./pages/user/CoursePlayer";
-import MyCourses from "./pages/user/MyCourses";
+import UserProgress   from "./pages/user/UserProgress";
+import UserProfile    from "./pages/user/UserProfile";
+import CoursePlayer   from "./pages/user/CoursePlayer";
+import MyCourses      from "./pages/user/MyCourses";
+import Notifications  from "./pages/user/Notifications";
 
 function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
         <Routes>
-
-          {/* Login */}
           <Route path="/" element={<Login />} />
 
           {/* Admin Panel */}
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<Dashboard />} />
-            <Route path="users" element={<Users />} />
-            <Route path="users/:id" element={<AdminUserProfile />} />
-            <Route path="activities" element={<Activities />} />
-            <Route path="analytics" element={<Analytics />} />
-            <Route path="reports" element={<Reports />} />
-            <Route path="alerts" element={<Alerts />} />
-            <Route path="settings" element={<Settings />} />
+            <Route path="users"       element={<Users />} />
+            <Route path="users/:id"   element={<AdminUserProfile />} />
+            <Route path="activities"  element={<Activities />} />
+            <Route path="analytics"   element={<Analytics />} />
+            <Route path="reports"     element={<Reports />} />
+            <Route path="alerts"      element={<Alerts />} />
+            <Route path="settings"    element={<Settings />} />
           </Route>
-            <Route path="/user" element={<UserLayout />}>
-            <Route path="dashboard" element={<UserDashboard />} />
-            <Route path="activities" element={<UserActivities />} />
-            <Route path="courses" element={<MyCourses />} />
+
+          {/* Student Panel */}
+          <Route path="/user" element={<UserLayout />}>
+            <Route path="dashboard"     element={<UserDashboard />} />
+            <Route path="activities"    element={<UserActivities />} />
+            <Route path="courses"       element={<MyCourses />} />
             <Route path="course/:engagementId" element={<CoursePlayer />} />
-            <Route path="progress" element={<UserProgress />} />
-            <Route path="profile" element={<UserProfile />} />
+            <Route path="progress"      element={<UserProgress />} />
+            <Route path="notifications" element={<Notifications />} />
+            <Route path="profile"       element={<UserProfile />} />
           </Route>
-
-
         </Routes>
       </BrowserRouter>
     </AuthProvider>

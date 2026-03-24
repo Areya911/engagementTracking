@@ -1,222 +1,133 @@
 import { useEffect, useState } from "react";
 import API from "../../api/axios";
 
-export default function MyActivities() {
+const CATEGORY_COLORS = {
+  Quiz:       { bg: "#dbeafe", color: "#2563eb" },
+  Hackathon:  { bg: "#fef3c7", color: "#d97706" },
+  Conference: { bg: "#dcfce7", color: "#16a34a" },
+  Workshop:   { bg: "#ede9fe", color: "#7c3aed" },
+  Course:     { bg: "#e0e7ff", color: "#4f46e5" },
+};
 
+const CATEGORY_ICONS = { Quiz:"📝", Hackathon:"💻", Conference:"🎙️", Workshop:"🔧", Course:"🎓" };
+
+export default function UserActivities() {
   const [activities, setActivities] = useState([]);
-  const [showRegisterPanel, setShowRegisterPanel] = useState(false);
+  const [filterCat, setFilterCat] = useState("All");
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    loadActivities();
-  }, []);
+  useEffect(() => { load(); }, []);
 
-  const loadActivities = async () => {
+  const load = async () => {
     try {
       const res = await API.get("/activities/student");
       setActivities(res.data);
     } catch (err) {
-      console.error("Failed to load activities", err);
+      console.error(err);
     }
   };
 
   const register = async (id) => {
+    setLoading(true);
     try {
-      setLoading(true);
-
-      await API.post("/activities/register", {
-        activityId: id
-      });
-
-      await loadActivities(); // real-time refresh
-      setShowRegisterPanel(false);
-
+      await API.post("/activities/register", { activityId: id });
+      await load();
     } catch (err) {
-      console.error("Registration failed", err);
       alert(err.response?.data?.message || "Registration failed");
     } finally {
       setLoading(false);
     }
   };
 
-  const unregisteredActivities = activities.filter(a => !a.status);
+  const categories = ["All", ...new Set(activities.map(a => a.category))];
+  const filtered   = filterCat === "All" ? activities : activities.filter(a => a.category === filterCat);
 
   return (
-    <div style={{ padding: 30 }}>
-
-      {/* HEADER */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <h1>My Activities</h1>
-
-        <button
-          style={registerBtn}
-          onClick={() => setShowRegisterPanel(!showRegisterPanel)}
-        >
-          + Register for Activity
-        </button>
+    <div>
+      <div className="section-header" style={{ marginBottom: 20 }}>
+        <div>
+          <div className="section-title">My Activities</div>
+          <div className="section-subtitle">{activities.filter(a => a.status).length} enrolled of {activities.length} available</div>
+        </div>
       </div>
 
-      {/* REGISTER PANEL */}
-      {showRegisterPanel && (
-        <div style={registerPanel}>
-          <h3>Available Activities</h3>
+      {/* FILTER TABS */}
+      <div style={{ display: "flex", gap: 8, marginBottom: 22, flexWrap: "wrap" }}>
+        {categories.map(cat => (
+          <button key={cat} onClick={() => setFilterCat(cat)}
+            style={{
+              padding: "7px 16px", borderRadius: 20, border: "1.5px solid",
+              borderColor: filterCat === cat ? "#4f46e5" : "#e2e8f0",
+              background: filterCat === cat ? "#4f46e5" : "white",
+              color: filterCat === cat ? "white" : "#475569",
+              fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit"
+            }}>
+            {CATEGORY_ICONS[cat] || "📌"} {cat}
+          </button>
+        ))}
+      </div>
 
-          {unregisteredActivities.length === 0 && (
-            <p style={{ color: "#777" }}>No available activities</p>
-          )}
+      {/* ACTIVITY CARDS GRID */}
+      {filtered.length === 0 ? (
+        <div className="card empty-state">
+          <div className="empty-icon">🗓️</div>
+          <h3>No activities found</h3>
+          <p>Check back later for new activities.</p>
+        </div>
+      ) : (
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(290px,1fr))", gap: 18 }}>
+          {filtered.map(a => {
+            const cc   = CATEGORY_COLORS[a.category] || { bg: "#f1f5f9", color: "#475569" };
+            const icon = CATEGORY_ICONS[a.category] || "📌";
+            const displayDate = a.category === "Course"
+              ? (a.startDate ? new Date(a.startDate).toLocaleDateString("en-IN",{ day:"numeric",month:"short",year:"numeric" }) : "No date")
+              : (a.date ? new Date(a.date).toLocaleDateString("en-IN",{ day:"numeric",month:"short",year:"numeric" }) : "No date");
 
-          {unregisteredActivities.map(a => (
-            <div key={a._id} style={registerRow}>
-              <span>{a.name}</span>
-              <button
-                style={smallRegisterBtn}
-                disabled={loading}
-                onClick={() => register(a._id)}
-              >
-                Register
-              </button>
-            </div>
-          ))}
+            return (
+              <div key={a._id} className="card" style={{ border: "1.5px solid #f1f5f9", padding: 20 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
+                  <div style={{ background: cc.bg, color: cc.color, borderRadius: 12,
+                    width: 44, height: 44, fontSize: 20, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    {icon}
+                  </div>
+                  <span style={{ background: cc.bg, color: cc.color, borderRadius: 20,
+                    padding: "3px 12px", fontSize: 12, fontWeight: 600 }}>
+                    {a.category}
+                  </span>
+                </div>
+
+                <div style={{ fontWeight: 700, fontSize: 15, color: "#1e293b", marginBottom: 4 }}>{a.name}</div>
+                {a.description && (
+                  <div style={{ fontSize: 12.5, color: "#64748b", marginBottom: 8, lineHeight: 1.5 }}>
+                    {a.description.slice(0, 80)}{a.description.length > 80 ? "…" : ""}
+                  </div>
+                )}
+                <div style={{ fontSize: 12, color: "#94a3b8", marginBottom: 14 }}>📅 {displayDate}</div>
+
+                {!a.status ? (
+                  <button
+                    disabled={loading}
+                    onClick={() => register(a._id)}
+                    style={{
+                      width: "100%", background: "linear-gradient(135deg,#4f46e5,#7c3aed)",
+                      color: "white", border: "none", borderRadius: 10, padding: "9px 0",
+                      fontSize: 13, fontWeight: 700, cursor: loading ? "not-allowed" : "pointer",
+                      fontFamily: "inherit", opacity: loading ? 0.7 : 1
+                    }}>
+                    + Register
+                  </button>
+                ) : (
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    {a.status === "present"    && <span className="badge badge-green">✅ Attended</span>}
+                    {a.status === "absent"     && <span className="badge badge-red">❌ Absent</span>}
+                    {a.status === "registered" && <span className="badge badge-indigo">⏳ Registered</span>}
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
-
-      {/* TABLE */}
-      <div style={tableContainer}>
-
-        {/* TABLE HEADER */}
-        <div style={{ ...row, fontWeight: "600", color: "#666" }}>
-          <div>ACTIVITY</div>
-          <div>TYPE</div>
-          <div>DATE</div>
-          <div>STATUS</div>
-        </div>
-
-        {/* TABLE ROWS */}
-        {activities.map(a => (
-          <div key={a._id} style={row}>
-
-            <div>{a.name}</div>
-
-            <div>
-              <TypeBadge type={a.category} />
-            </div>
-
-            <div>
-              {new Date(a.date).toLocaleDateString()}
-            </div>
-
-            <div>
-              {a.status === "present" && (
-                <Status text="Attended" color="#10b981" />
-              )}
-
-              {a.status === "registered" && (
-                <Status text="Registered" color="#5a4de1" />
-              )}
-
-              {a.status === "absent" && (
-                <Status text="Missed" color="#ef4444" />
-              )}
-
-              {!a.status && (
-                <span style={{ color: "#999" }}>Not Registered</span>
-              )}
-            </div>
-
-          </div>
-        ))}
-
-      </div>
-
     </div>
   );
 }
-
-/* ================= UI COMPONENTS ================= */
-
-function Status({ text, color }) {
-  return (
-    <span style={{
-      background: color + "20",
-      color,
-      padding: "5px 12px",
-      borderRadius: 20,
-      fontSize: 13
-    }}>
-      {text}
-    </span>
-  );
-}
-
-function TypeBadge({ type }) {
-
-  const colors = {
-    Quiz: "#60a5fa",
-    Hackathon: "#f59e0b",
-    Conference: "#10b981",
-    Workshop: "#8b5cf6"
-  };
-
-  return (
-    <span style={{
-      padding: "6px 14px",
-      borderRadius: 20,
-      background: (colors[type] || "#999") + "20",
-      color: colors[type] || "#333",
-      fontSize: 13
-    }}>
-      {type}
-    </span>
-  );
-}
-
-/* ================= STYLES ================= */
-
-const tableContainer = {
-  background: "white",
-  borderRadius: 20,
-  padding: 20,
-  marginTop: 20
-};
-
-const row = {
-  display: "grid",
-  gridTemplateColumns: "2fr 1fr 1fr 1fr",
-  alignItems: "center",
-  padding: "16px 0",
-  borderBottom: "1px solid #eee"
-};
-
-const registerPanel = {
-  background: "white",
-  padding: 20,
-  borderRadius: 15,
-  marginTop: 20,
-  marginBottom: 20,
-  boxShadow: "0 5px 15px rgba(0,0,0,0.05)"
-};
-
-const registerRow = {
-  display: "flex",
-  justifyContent: "space-between",
-  alignItems: "center",
-  marginBottom: 10
-};
-
-const registerBtn = {
-  background: "#5a4de1",
-  color: "white",
-  border: "none",
-  padding: "10px 18px",
-  borderRadius: 10,
-  cursor: "pointer"
-};
-
-const smallRegisterBtn = {
-  background: "#5a4de1",
-  color: "white",
-  border: "none",
-  padding: "6px 14px",
-  borderRadius: 20,
-  cursor: "pointer"
-};
