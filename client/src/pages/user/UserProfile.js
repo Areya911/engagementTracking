@@ -4,7 +4,7 @@ import { useContext } from "react";
 import { AuthContext } from "../../context/AuthContext";
 
 export default function UserProfile() {
-  const { user: authUser } = useContext(AuthContext);
+  useContext(AuthContext);
   const [data, setData] = useState(null);
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({ name: "", department: "" });

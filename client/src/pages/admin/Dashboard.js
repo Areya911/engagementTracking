@@ -15,6 +15,7 @@ export default function Dashboard() {
   const [engagements, setEngagements] = useState([]);
   const [trendData, setTrendData] = useState([]);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { load(); }, []);
 
   const load = async () => {

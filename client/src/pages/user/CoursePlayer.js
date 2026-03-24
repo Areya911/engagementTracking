@@ -19,6 +19,7 @@ export default function CoursePlayer() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     load();
     return () => stopTracking();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [engagementId]);
 
   const load = async () => {

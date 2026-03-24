@@ -7,6 +7,7 @@ export default function AdminUserProfile() {
   const navigate = useNavigate();
   const [data, setData] = useState(null);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { load(); }, [id]);
 
   const load = async () => {
