@@ -6,10 +6,6 @@ server/node_modules/
 # Build output
 client/build/
 
-# Environment variables
-.env
-server/.env
-
 # Logs
 *.log
 npm-debug.log*
