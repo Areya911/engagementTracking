@@ -4,6 +4,7 @@
   "description": "Engagement Tracking System Backend",
   "main": "server.js",
   "scripts": {
+    "start": "node server.js",
     "dev": "nodemon server.js"
   },
   "author": "",
