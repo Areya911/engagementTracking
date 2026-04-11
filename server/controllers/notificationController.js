@@ -37,11 +37,13 @@ exports.getMyNotifications = async (req, res) => {
 
 /* MARK READ */
 exports.markRead = async (req, res) => {
-
-  await Notification.findByIdAndUpdate(
-    req.params.id,
-    { read: true }
-  );
-
-  res.json({ success: true });
+  try {
+    await Notification.findByIdAndUpdate(
+      req.params.id,
+      { read: true }
+    );
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
 };
