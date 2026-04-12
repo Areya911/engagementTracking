@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const API = axios.create({
-    baseURL: process.env.REACT_APP_API_URL || 'https://engagementtracking-1.onrender.com/api',
+    baseURL: process.env.REACT_APP_API_URL || "/api",
 });
 
 API.interceptors.request.use((req) => {
@@ -11,5 +11,16 @@ API.interceptors.request.use((req) => {
     }
     return req;
 });
+
+API.interceptors.response.use(
+    (res) => res,
+    (err) => {
+        // Enhance error message for network/CORS failures
+        if (!err.response) {
+            err.message = "Cannot connect to server. Please check your connection.";
+        }
+        return Promise.reject(err);
+    }
+);
 
 export default API;

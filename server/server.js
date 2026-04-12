@@ -38,20 +38,10 @@ app.use('/api/dashboard',     require('./routes/dashboardRoutes'));
 app.use('/api/users',         require('./routes/userRoutes'));
 app.use('/api/notifications', require('./routes/notificationRoutes'));
 
-// ---------- Serve React client in production ----------
-if (process.env.NODE_ENV === "production") {
-    const clientBuild = path.join(__dirname, "..", "client", "build");
-    app.use(express.static(clientBuild));
-
-    // Any route that is NOT /api/* → serve React's index.html
-    app.get("*", (req, res) => {
-        res.sendFile(path.join(clientBuild, "index.html"));
-    });
-} else {
-    app.get('/', (req, res) => {
-        res.send('API Running...');
-    });
-}
+// ---------- Health check ----------
+app.get('/', (req, res) => {
+    res.json({ status: 'ok', message: 'EduTrack API is running' });
+});
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

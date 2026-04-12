@@ -21,7 +21,13 @@ export default function Login() {
       setUser({ ...rest, role, token });
       navigate(role === "admin" ? "/admin" : "/user/dashboard");
     } catch (err) {
-      setError(err.response?.data?.message || "Invalid credentials");
+      if (err.response?.data?.message) {
+        setError(err.response.data.message);
+      } else if (!err.response) {
+        setError("Cannot connect to server. Please try again later.");
+      } else {
+        setError("Login failed. Please check your credentials.");
+      }
     } finally {
       setLoading(false);
     }
