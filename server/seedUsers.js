@@ -35,6 +35,22 @@ const seedUsers = async () => {
         engagementScore: 0
       },
       {
+        name: "Sneha",
+        email: "sneha@edu.in",
+        password: studentPassword,
+        role: "user",
+        department: "Electronics",
+        engagementScore: 0
+      },
+      {
+        name: "Rishi",
+        email: "rishi@edu.in",
+        password: studentPassword,
+        role: "user",
+        department: "Mechanical Engineering",
+        engagementScore: 0
+      },
+      {
         name: "Arjun",
         email: "arjun@edu.in",
         password: studentPassword,
