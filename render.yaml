@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: edutrack-api
+    runtime: node
+    region: oregon
+    branch: main
+    rootDir: server
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: MONGO_URI
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: CLIENT_URL
+        value: https://engagement-tracking-system.vercel.app
