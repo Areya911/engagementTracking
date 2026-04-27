@@ -4,7 +4,7 @@
   "description": "EduTrack – Student Engagement Intelligence Platform",
   "scripts": {
     "install:all": "cd server && npm install && cd ../client && npm install",
-    "build": "cd client && npm install && npm run build",
+    "build": "cd server && npm install",
     "start": "cd server && node server.js",
     "dev": "cd server && npm run dev"
   },
