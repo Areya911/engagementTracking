@@ -7,14 +7,21 @@ import {
 
 export default function UserProgress() {
   const [data, setData] = useState(null);
+  const [error, setError] = useState(null);
 
   useEffect(() => { load(); }, []);
   const load = async () => {
-    const res = await API.get("/users/progress/analytics");
-    setData(res.data);
+    try {
+      const res = await API.get("/users/progress/analytics");
+      setData(res.data);
+    } catch (err) {
+      setError("Could not load progress data.");
+      console.error(err);
+    }
   };
 
-  if (!data) return <div style={{ padding: 60, color: "#94a3b8" }}>Loading…</div>;
+  if (error) return <div style={{ padding: 60, color: "#ef4444" }}>{error}</div>;
+  if (!data)  return <div style={{ padding: 60, color: "#94a3b8" }}>Loading…</div>;
 
   const score = data.engagementScore || 0;
   const scoreColor = score < 20 ? "#ef4444" : score <= 50 ? "#f59e0b" : "#10b981";

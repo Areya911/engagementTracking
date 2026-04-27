@@ -116,7 +116,10 @@ export default function Login() {
           <div style={styles.demoHint}>
             <strong>Demo Credentials</strong><br />
             <span style={{ color: "#7c3aed" }}>Admin:</span> admin@edu.in / admin123<br />
-            <span style={{ color: "#0ea5e9" }}>Student:</span> kavya@edu.in / student123
+            <span style={{ color: "#0ea5e9" }}>Kavya:</span> kavya@edu.in / kavya123<br />
+            <span style={{ color: "#0ea5e9" }}>Arjun:</span> arjun@edu.in / arjun123<br />
+            <span style={{ color: "#0ea5e9" }}>Sneha:</span> sneha@edu.in / sneha123<br />
+            <span style={{ color: "#0ea5e9" }}>Ravi:</span> ravi@edu.in / ravi123
           </div>
         </div>
       </div>

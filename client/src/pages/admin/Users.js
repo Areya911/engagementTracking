@@ -11,8 +11,13 @@ export default function Users() {
   useEffect(() => { load(); }, []);
 
   const load = async () => {
-    const res = await API.get("/users");
-    setUsers(res.data.filter(u => u.role === "user"));
+    try {
+      const res = await API.get("/users");
+      // Show all accounts except the super-admin (admin@edu.in)
+      setUsers(res.data.filter(u => u.role === "user"));
+    } catch (err) {
+      console.error("Users load error:", err);
+    }
   };
 
   const filtered = users.filter(u =>
@@ -35,7 +40,7 @@ export default function Users() {
       <div className="section-header">
         <div>
           <div className="section-title">Students</div>
-          <div className="section-subtitle">{users.length} registered students</div>
+          <div className="section-subtitle">{users.length} registered users</div>
         </div>
         <div className="topbar-search-wrap">
           <span className="topbar-search-icon">

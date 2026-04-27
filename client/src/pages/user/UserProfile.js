@@ -14,9 +14,13 @@ export default function UserProfile() {
   useEffect(() => { load(); }, []);
 
   const load = async () => {
-    const res = await API.get("/users/profile/data");
-    setData(res.data);
-    setForm({ name: res.data.user?.name || "", department: res.data.user?.department || "" });
+    try {
+      const res = await API.get("/users/profile/data");
+      setData(res.data);
+      setForm({ name: res.data.user?.name || "", department: res.data.user?.department || "" });
+    } catch (err) {
+      console.error("Profile load error:", err);
+    }
   };
 
   const saveProfile = async () => {

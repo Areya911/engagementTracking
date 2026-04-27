@@ -8,8 +8,12 @@ export default function Alerts() {
   useEffect(() => { loadAlerts(); }, []);
 
   const loadAlerts = async () => {
-    const res = await API.get("/dashboard/alerts");
-    setAlerts(res.data);
+    try {
+      const res = await API.get("/dashboard/alerts");
+      setAlerts(res.data);
+    } catch (err) {
+      console.error("Alerts load error:", err);
+    }
   };
 
   const sendNotification = async (student) => {
